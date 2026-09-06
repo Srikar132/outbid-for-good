@@ -5,13 +5,14 @@ import type {
   ENTRY_DETAIL_QUERY_RESULT,
   SITE_CONFIG_QUERY_RESULT,
 } from '@/sanity.types'
-import { fetchCached } from './client'
+import { client, fetchCached } from './client'
 import { sanityFetch } from './live'
 import {
   ACTIVE_CYCLE_QUERY,
   CATEGORIES_QUERY,
   CONFIRMED_ENTRIES_QUERY,
   ENTRY_DETAIL_QUERY,
+  SCOPE_RANK_PREVIEW_QUERY,
   SITE_CONFIG_QUERY,
 } from './queries'
 
@@ -41,6 +42,15 @@ export async function getConfirmedEntries(cycleId: string) {
 export async function getEntryDetail(slug: string) {
   const { data } = await sanityFetch({ query: ENTRY_DETAIL_QUERY, params: { slug } })
   return data
+}
+
+export function getScopeRankPreview(params: {
+  cycleId: string
+  categorySlug: string | null
+  since: string | null
+  amount: number
+}) {
+  return client.fetch(SCOPE_RANK_PREVIEW_QUERY, params)
 }
 
 export async function getLeaderboardData() {

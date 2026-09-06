@@ -100,3 +100,21 @@ export const ENTRY_DETAIL_QUERY = defineQuery(/* groq */ `
     }
   }
 `)
+
+export const SCOPE_RANK_PREVIEW_QUERY = defineQuery(/* groq */ `
+  {
+    "rank": 1 + count(*[
+      _type == "leaderboardEntry" && status == "confirmed" &&
+      cycle._ref == $cycleId &&
+      ($categorySlug == null || category->slug.current == $categorySlug) &&
+      ($since == null || confirmedAt >= $since) &&
+      amount > $amount
+    ]),
+    "total": 1 + count(*[
+      _type == "leaderboardEntry" && status == "confirmed" &&
+      cycle._ref == $cycleId &&
+      ($categorySlug == null || category->slug.current == $categorySlug) &&
+      ($since == null || confirmedAt >= $since)
+    ])
+  }
+`)

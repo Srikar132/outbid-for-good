@@ -13,6 +13,8 @@ export function Nav({
   stats?: { totalRaised: number; donorCount: number };
 }) {
   const pathname = usePathname();
+  const isLeaderboardRoute =
+    pathname === "/" || pathname === "/today" || pathname.startsWith("/category/");
 
   return (
     <header className="sticky top-0 z-10 border-b border-neutral-200 bg-cream/90 backdrop-blur">
@@ -35,7 +37,7 @@ export function Nav({
             Our Cause
           </Link>
           <Suspense fallback={<div className="h-9 w-9" />}>
-            {pathname === "/" && <SearchBox />}
+            {isLeaderboardRoute && <SearchBox />}
           </Suspense>
           <ThemeToggle />
           {/* <Link

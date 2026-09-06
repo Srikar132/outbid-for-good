@@ -381,6 +381,14 @@ export type ENTRY_DETAIL_QUERY_RESULT = {
   }>;
 } | null;
 
+// Source: ../sanity/lib/queries.ts
+// Variable: SCOPE_RANK_PREVIEW_QUERY
+// Query: {    "rank": 1 + count(*[      _type == "leaderboardEntry" && status == "confirmed" &&      cycle._ref == $cycleId &&      ($categorySlug == null || category->slug.current == $categorySlug) &&      ($since == null || confirmedAt >= $since) &&      amount > $amount    ]),    "total": 1 + count(*[      _type == "leaderboardEntry" && status == "confirmed" &&      cycle._ref == $cycleId &&      ($categorySlug == null || category->slug.current == $categorySlug) &&      ($since == null || confirmedAt >= $since)    ])  }
+export type SCOPE_RANK_PREVIEW_QUERY_RESULT = {
+  rank: number;
+  total: number;
+};
+
 // Query TypeMap
 import "@sanity/client";
 declare module "@sanity/client" {
@@ -391,5 +399,6 @@ declare module "@sanity/client" {
     '\n  *[_id == "siteConfig"][0] {\n    _id,\n    causeTitle,\n    causeBlurb,\n    fundMessage,\n    minimumIncrement,\n    creatorName,\n    "creatorPhotoUrl": creatorPhoto.asset->url,\n    creatorBlurb\n  }\n': SITE_CONFIG_QUERY_RESULT;
     '\n  *[_type == "leaderboardEntry" && status == "confirmed" && cycle._ref == $cycleId]\n  | order(amount desc) {\n    _id,\n    "slug": slug.current,\n    displayName,\n    companyName,\n    tagline,\n    url,\n    amount,\n    clickCount,\n    "confirmedAt": coalesce(confirmedAt, _createdAt),\n    "category": category->{ _id, title, "slug": slug.current },\n    logo\n  }\n': CONFIRMED_ENTRIES_QUERY_RESULT;
     '\n  *[_type == "leaderboardEntry" && status == "confirmed" && slug.current == $slug][0] {\n    _id,\n    "slug": slug.current,\n    displayName,\n    companyName,\n    tagline,\n    url,\n    amount,\n    clickCount,\n    raiseCount,\n    "confirmedAt": coalesce(confirmedAt, _createdAt),\n    "category": category->{ _id, title, "slug": slug.current },\n    logo,\n    "cycle": cycle->{ _id, title, startDate, endDate, isActive },\n    "categoryRank": 1 + count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&\n      amount > ^.amount\n    ]),\n    "categoryTotal": count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref\n    ]),\n    "overallRank": 1 + count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref && amount > ^.amount\n    ]),\n    "overallTotal": count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref\n    ]),\n    "siblings": *[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&\n      _id != ^._id\n    ] | order(amount desc) [0...4] {\n      _id,\n      "slug": slug.current,\n      displayName,\n      companyName,\n      amount,\n      logo,\n      "rank": 1 + count(*[\n        _type == "leaderboardEntry" && status == "confirmed" &&\n        cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&\n        amount > ^.amount\n      ])\n    }\n  }\n': ENTRY_DETAIL_QUERY_RESULT;
+    '\n  {\n    "rank": 1 + count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == $cycleId &&\n      ($categorySlug == null || category->slug.current == $categorySlug) &&\n      ($since == null || confirmedAt >= $since) &&\n      amount > $amount\n    ]),\n    "total": 1 + count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == $cycleId &&\n      ($categorySlug == null || category->slug.current == $categorySlug) &&\n      ($since == null || confirmedAt >= $since)\n    ])\n  }\n': SCOPE_RANK_PREVIEW_QUERY_RESULT;
   }
 }
