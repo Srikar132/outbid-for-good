@@ -33,8 +33,8 @@ export function Nav({
           )}
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
-          <Link href="/categories" className="text-body hidden text-neutral-700 sm:inline">
-            Categories
+          <Link href="/about" className="text-body hidden text-neutral-700 sm:inline">
+            About
           </Link>
           <Link href="#cause" className="text-body hidden text-neutral-700 sm:inline">
             Our Cause
