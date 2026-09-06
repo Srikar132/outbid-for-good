@@ -12,7 +12,7 @@ export function ProgressBar({
   percent: number;
 }) {
   return (
-    <div className="rounded-lg bg-white p-4 shadow-sm">
+    <div className="rounded-lg bg-surface p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <p className="text-body-lg text-neutral-900">{label}</p>
         <p className="text-small text-neutral-500">Current: {current}</p>

@@ -1,0 +1,57 @@
+"use client";
+
+import { Crown } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Suspense } from "react";
+import { ThemeToggle } from "./ThemeToggle";
+import { SearchBox } from "./SearchBox";
+
+export function Nav({
+  stats,
+}: {
+  stats?: { totalRaised: number; donorCount: number };
+}) {
+  const pathname = usePathname();
+
+  return (
+    <header className="sticky top-0 z-10 border-b border-neutral-200 bg-cream/90 backdrop-blur">
+      <nav className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2">
+            <Crown size={20} className="text-accent-500" fill="currentColor" />
+            <span className="text-h3 text-neutral-900">OUTBID</span>
+          </Link>
+          {stats && (
+            <span className="text-small hidden items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-neutral-500 shadow-sm sm:inline-flex dark:ring-1 dark:ring-white/5">
+              <span className="h-1.5 w-1.5 rounded-full bg-success" />₹
+              {stats.totalRaised.toLocaleString("en-IN")} raised &middot;{" "}
+              {stats.donorCount} donors
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Link
+            href="/"
+            className="text-body hidden font-semibold text-primary-500 sm:inline"
+          >
+            Leaderboard
+          </Link>
+          <Link href="/#cause" className="text-body hidden text-neutral-700 sm:inline">
+            Our Cause
+          </Link>
+          <Suspense fallback={<div className="h-9 w-9" />}>
+            {pathname === "/" && <SearchBox />}
+          </Suspense>
+          <ThemeToggle />
+          <Link
+            href="/donate"
+            className="inline-flex h-10 items-center justify-center rounded-md bg-accent-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-400"
+          >
+            Outbid Now
+          </Link>
+        </div>
+      </nav>
+    </header>
+  );
+}

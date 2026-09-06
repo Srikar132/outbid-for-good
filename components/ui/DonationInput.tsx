@@ -13,25 +13,33 @@ export function DonationInput({
   value,
   state = "default",
   helperText,
+  onChange,
+  placeholder,
 }: {
   label?: string;
   value: string;
   state?: State;
   helperText?: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
 }) {
   return (
     <div>
-      <label className="text-small mb-1.5 block font-semibold text-neutral-700">
-        {label}
-      </label>
+      {label && (
+        <label className="text-small mb-1.5 block font-semibold text-neutral-700">
+          {label}
+        </label>
+      )}
       <div
-        className={`flex h-12 items-center gap-1 rounded-md border bg-white px-3 ${borderByState[state]}`}
+        className={`flex h-12 items-center gap-1 rounded-md border bg-surface px-3 ${borderByState[state]}`}
       >
         <span className="text-body-lg text-neutral-500">₹</span>
         <input
           className="text-body-lg w-full text-neutral-900 outline-none"
           value={value}
-          readOnly
+          placeholder={placeholder}
+          readOnly={!onChange}
+          onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         />
         {state === "success" && (
           <CheckCircle2 size={18} className="shrink-0 text-primary-400" />
@@ -59,7 +67,7 @@ export function SecurePaymentInput() {
       <label className="text-small mb-1.5 block font-semibold text-neutral-700">
         Payment Details (Secure)
       </label>
-      <div className="flex h-12 items-center gap-2 rounded-md border border-neutral-200 bg-white px-3">
+      <div className="flex h-12 items-center gap-2 rounded-md border border-neutral-200 bg-surface px-3">
         <span className="text-body-lg flex-1 text-neutral-900">
           Card Number 1234 5678 9012 3456
         </span>

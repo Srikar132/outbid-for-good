@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 :root {
   /* Primary (Green) */
   --color-primary-500: #15803d;
@@ -14,6 +16,14 @@
   --color-accent-300: #ffa37a;
   --color-accent-200: #ffc7b0;
   --color-accent-100: #ffe9df;
+  --color-accent-50: #fff4ee;
+
+  /* Warm page background */
+  --color-cream: #fdf8f3;
+
+  /* Card/surface background — distinct from --color-white, which always
+     means literal white (e.g. text on a solid accent button). */
+  --color-surface: #ffffff;
 
   /* Neutrals */
   --color-neutral-900: #17211b;
@@ -63,6 +73,9 @@
   --color-accent-300: var(--color-accent-300);
   --color-accent-200: var(--color-accent-200);
   --color-accent-100: var(--color-accent-100);
+  --color-accent-50: var(--color-accent-50);
+  --color-cream: var(--color-cream);
+  --color-surface: var(--color-surface);
 
   --color-neutral-900: var(--color-neutral-900);
   --color-neutral-700: var(--color-neutral-700);
@@ -140,4 +153,49 @@ body {
   font-weight: 400;
   font-size: 12px;
   line-height: 16px;
+}
+
+/* Dark palette — overrides the underlying CSS custom properties (not the
+   utility classes), so every usage of a token — including opacity-modified
+   ones like bg-cream/90 — picks it up automatically via the same var()
+   indirection @theme inline already uses for --background/--foreground.
+   --color-white is deliberately left alone: it means literal white (e.g.
+   button label text on a solid accent button) regardless of theme. */
+.dark {
+  --color-cream: #18130f;
+  --color-surface: #241d18;
+  --color-neutral-900: #f5f0ea;
+  --color-neutral-700: #d8cec4;
+  --color-neutral-500: #a89e94;
+  --color-neutral-300: #6b6158;
+  --color-neutral-200: #3d332c;
+  --color-neutral-100: #302722;
+  --color-neutral-50: #18130f;
+  --color-accent-50: #2f1e14;
+  --color-accent-100: #4a2712;
+  --color-primary-100: #16301f;
+}
+
+.dark .bg-info\/10 {
+  background-color: rgba(37, 99, 235, 0.18);
+}
+.dark .bg-error\/10 {
+  background-color: rgba(220, 38, 38, 0.18);
+}
+/* Shadows barely read on a dark surface, so elevation comes from a faint
+   white ring instead once we're in dark mode. */
+.dark .shadow-sm {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.dark .shadow-md {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.45);
+}
+.dark .shadow-lg {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 12px 24px rgba(0, 0, 0, 0.5);
 }

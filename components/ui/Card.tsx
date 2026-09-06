@@ -11,7 +11,7 @@ export function Card({
   className?: string;
 }) {
   return (
-    <div className={`rounded-lg bg-white p-5 shadow-sm ${className}`}>
+    <div className={`rounded-lg bg-surface p-5 shadow-sm ${className}`}>
       {children}
     </div>
   );
