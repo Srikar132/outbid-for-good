@@ -1,26 +1,143 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Primary (Green) */
+  --color-primary-500: #15803d;
+  --color-primary-400: #16a34a;
+  --color-primary-300: #4ade80;
+  --color-primary-200: #86efac;
+  --color-primary-100: #dcfce7;
+
+  /* Accent (Outbid orange) */
+  --color-accent-500: #ff5a1f;
+  --color-accent-400: #ff7a45;
+  --color-accent-300: #ffa37a;
+  --color-accent-200: #ffc7b0;
+  --color-accent-100: #ffe9df;
+
+  /* Neutrals */
+  --color-neutral-900: #17211b;
+  --color-neutral-700: #374151;
+  --color-neutral-500: #667085;
+  --color-neutral-300: #98a2b3;
+  --color-neutral-200: #d0d5dd;
+  --color-neutral-100: #f1f5f2;
+  --color-neutral-50: #fafcfa;
+  --color-white: #ffffff;
+
+  /* Semantic */
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --color-warning: #f59e0b;
+  --color-info: #2563eb;
+
+  --background: var(--color-neutral-50);
+  --foreground: var(--color-neutral-900);
+
+  /* Radius */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-primary-500: var(--color-primary-500);
+  --color-primary-400: var(--color-primary-400);
+  --color-primary-300: var(--color-primary-300);
+  --color-primary-200: var(--color-primary-200);
+  --color-primary-100: var(--color-primary-100);
+
+  --color-accent-500: var(--color-accent-500);
+  --color-accent-400: var(--color-accent-400);
+  --color-accent-300: var(--color-accent-300);
+  --color-accent-200: var(--color-accent-200);
+  --color-accent-100: var(--color-accent-100);
+
+  --color-neutral-900: var(--color-neutral-900);
+  --color-neutral-700: var(--color-neutral-700);
+  --color-neutral-500: var(--color-neutral-500);
+  --color-neutral-300: var(--color-neutral-300);
+  --color-neutral-200: var(--color-neutral-200);
+  --color-neutral-100: var(--color-neutral-100);
+  --color-neutral-50: var(--color-neutral-50);
+
+  --color-success: var(--color-success);
+  --color-error: var(--color-error);
+  --color-warning: var(--color-warning);
+  --color-info: var(--color-info);
+
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-full: var(--radius-full);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --font-display: var(--font-sora);
+  --font-sans: var(--font-inter);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+}
+
+/* Type scale */
+.text-display {
+  font-family: var(--font-sora);
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 56px;
+}
+.text-h1 {
+  font-family: var(--font-sora);
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 40px;
+}
+.text-h2 {
+  font-family: var(--font-sora);
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 32px;
+}
+.text-h3 {
+  font-family: var(--font-sora);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 28px;
+}
+.text-body-lg {
+  font-family: var(--font-inter);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
+}
+.text-body {
+  font-family: var(--font-inter);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+}
+.text-small {
+  font-family: var(--font-inter);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
 }
