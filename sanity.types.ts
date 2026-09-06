@@ -81,6 +81,7 @@ export type LeaderboardEntry = {
   _rev: string;
   displayName: string;
   companyName?: string;
+  slug: Slug;
   logo?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -94,10 +95,17 @@ export type LeaderboardEntry = {
   cycle: CycleReference;
   amount: number;
   clickCount?: number;
+  raiseCount?: number;
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   status: "pending" | "confirmed" | "failed";
   confirmedAt?: string;
+};
+
+export type Slug = {
+  _type: "slug";
+  current: string;
+  source?: string;
 };
 
 export type Cycle = {
@@ -121,12 +129,6 @@ export type Category = {
   title: string;
   slug: Slug;
   description?: string;
-};
-
-export type Slug = {
-  _type: "slug";
-  current: string;
-  source?: string;
 };
 
 export type SanityImagePaletteSwatch = {
@@ -226,7 +228,25 @@ export type Geopoint = {
   alt?: number;
 };
 
-export type AllSanitySchemaTypes = SanityImageAssetReference | SiteConfig | SanityImageCrop | SanityImageHotspot | CategoryReference | CycleReference | LeaderboardEntry | Cycle | Category | Slug | SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageMetadata | SanityFileAsset | SanityAssetSourceData | SanityImageAsset | Geopoint;
+export type AllSanitySchemaTypes =
+  | SanityImageAssetReference
+  | SiteConfig
+  | SanityImageCrop
+  | SanityImageHotspot
+  | CategoryReference
+  | CycleReference
+  | LeaderboardEntry
+  | Slug
+  | Cycle
+  | Category
+  | SanityImagePaletteSwatch
+  | SanityImagePalette
+  | SanityImageDimensions
+  | SanityImageMetadata
+  | SanityFileAsset
+  | SanityAssetSourceData
+  | SanityImageAsset
+  | Geopoint;
 
 // Source: ../app/api/click/[id]/route.ts
 // Variable: ENTRY_URL_QUERY
@@ -257,31 +277,35 @@ export type ACTIVE_CYCLE_QUERY_RESULT = {
 // Source: ../sanity/lib/queries.ts
 // Variable: SITE_CONFIG_QUERY
 // Query: *[_id == "siteConfig"][0] {    _id,    causeTitle,    causeBlurb,    fundMessage,    minimumIncrement,    creatorName,    "creatorPhotoUrl": creatorPhoto.asset->url,    creatorBlurb  }
-export type SITE_CONFIG_QUERY_RESULT = {
-  _id: "siteConfig";
-  causeTitle: null;
-  causeBlurb: null;
-  fundMessage: null;
-  minimumIncrement: null;
-  creatorName: null;
-  creatorPhotoUrl: null;
-  creatorBlurb: null;
-} | {
-  _id: "siteConfig";
-  causeTitle: string;
-  causeBlurb: string;
-  fundMessage: string;
-  minimumIncrement: number;
-  creatorName: string | null;
-  creatorPhotoUrl: string | null;
-  creatorBlurb: string | null;
-} | null;
+export type SITE_CONFIG_QUERY_RESULT =
+  | {
+      _id: "siteConfig";
+      causeTitle: null;
+      causeBlurb: null;
+      fundMessage: null;
+      minimumIncrement: null;
+      creatorName: null;
+      creatorPhotoUrl: null;
+      creatorBlurb: null;
+    }
+  | {
+      _id: "siteConfig";
+      causeTitle: string;
+      causeBlurb: string;
+      fundMessage: string;
+      minimumIncrement: number;
+      creatorName: string | null;
+      creatorPhotoUrl: string | null;
+      creatorBlurb: string | null;
+    }
+  | null;
 
 // Source: ../sanity/lib/queries.ts
 // Variable: CONFIRMED_ENTRIES_QUERY
-// Query: *[_type == "leaderboardEntry" && status == "confirmed" && cycle._ref == $cycleId]  | order(amount desc) {    _id,    displayName,    companyName,    tagline,    url,    amount,    clickCount,    "confirmedAt": coalesce(confirmedAt, _createdAt),    "category": category->{ _id, title, "slug": slug.current },    "logoUrl": logo.asset->url  }
+// Query: *[_type == "leaderboardEntry" && status == "confirmed" && cycle._ref == $cycleId]  | order(amount desc) {    _id,    "slug": slug.current,    displayName,    companyName,    tagline,    url,    amount,    clickCount,    "confirmedAt": coalesce(confirmedAt, _createdAt),    "category": category->{ _id, title, "slug": slug.current },    logo  }
 export type CONFIRMED_ENTRIES_QUERY_RESULT = Array<{
   _id: string;
+  slug: string;
   displayName: string;
   companyName: string | null;
   tagline: string | null;
@@ -294,6 +318,78 @@ export type CONFIRMED_ENTRIES_QUERY_RESULT = Array<{
     title: string;
     slug: string;
   };
-  logoUrl: string | null;
+  logo: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
 }>;
 
+// Source: ../sanity/lib/queries.ts
+// Variable: ENTRY_DETAIL_QUERY
+// Query: *[_type == "leaderboardEntry" && status == "confirmed" && slug.current == $slug][0] {    _id,    "slug": slug.current,    displayName,    companyName,    tagline,    url,    amount,    clickCount,    raiseCount,    "confirmedAt": coalesce(confirmedAt, _createdAt),    "category": category->{ _id, title, "slug": slug.current },    logo,    "cycle": cycle->{ _id, title, startDate, endDate, isActive },    "categoryRank": 1 + count(*[      _type == "leaderboardEntry" && status == "confirmed" &&      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&      amount > ^.amount    ]),    "categoryTotal": count(*[      _type == "leaderboardEntry" && status == "confirmed" &&      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref    ]),    "overallRank": 1 + count(*[      _type == "leaderboardEntry" && status == "confirmed" &&      cycle._ref == ^.cycle._ref && amount > ^.amount    ]),    "overallTotal": count(*[      _type == "leaderboardEntry" && status == "confirmed" &&      cycle._ref == ^.cycle._ref    ]),    "siblings": *[      _type == "leaderboardEntry" && status == "confirmed" &&      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&      _id != ^._id    ] | order(amount desc) [0...4] {      _id,      "slug": slug.current,      displayName,      companyName,      amount,      logo,      "rank": 1 + count(*[        _type == "leaderboardEntry" && status == "confirmed" &&        cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&        amount > ^.amount      ])    }  }
+export type ENTRY_DETAIL_QUERY_RESULT = {
+  _id: string;
+  slug: string;
+  displayName: string;
+  companyName: string | null;
+  tagline: string | null;
+  url: string;
+  amount: number;
+  clickCount: number | null;
+  raiseCount: number | null;
+  confirmedAt: string;
+  category: {
+    _id: string;
+    title: string;
+    slug: string;
+  };
+  logo: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
+  cycle: {
+    _id: string;
+    title: string | null;
+    startDate: string;
+    endDate: string;
+    isActive: boolean | null;
+  };
+  categoryRank: number;
+  categoryTotal: number;
+  overallRank: number;
+  overallTotal: number;
+  siblings: Array<{
+    _id: string;
+    slug: string;
+    displayName: string;
+    companyName: string | null;
+    amount: number;
+    logo: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
+    rank: number;
+  }>;
+} | null;
+
+// Query TypeMap
+import "@sanity/client";
+declare module "@sanity/client" {
+  interface SanityQueries {
+    '*[_type == "leaderboardEntry" && _id == $id][0].url': ENTRY_URL_QUERY_RESULT;
+    '\n  *[_type == "category"] | order(title asc) {\n    _id,\n    title,\n    "slug": slug.current,\n    description\n  }\n': CATEGORIES_QUERY_RESULT;
+    '\n  *[_type == "cycle" && isActive == true][0] {\n    _id,\n    title,\n    startDate,\n    endDate,\n    isActive\n  }\n': ACTIVE_CYCLE_QUERY_RESULT;
+    '\n  *[_id == "siteConfig"][0] {\n    _id,\n    causeTitle,\n    causeBlurb,\n    fundMessage,\n    minimumIncrement,\n    creatorName,\n    "creatorPhotoUrl": creatorPhoto.asset->url,\n    creatorBlurb\n  }\n': SITE_CONFIG_QUERY_RESULT;
+    '\n  *[_type == "leaderboardEntry" && status == "confirmed" && cycle._ref == $cycleId]\n  | order(amount desc) {\n    _id,\n    "slug": slug.current,\n    displayName,\n    companyName,\n    tagline,\n    url,\n    amount,\n    clickCount,\n    "confirmedAt": coalesce(confirmedAt, _createdAt),\n    "category": category->{ _id, title, "slug": slug.current },\n    logo\n  }\n': CONFIRMED_ENTRIES_QUERY_RESULT;
+    '\n  *[_type == "leaderboardEntry" && status == "confirmed" && slug.current == $slug][0] {\n    _id,\n    "slug": slug.current,\n    displayName,\n    companyName,\n    tagline,\n    url,\n    amount,\n    clickCount,\n    raiseCount,\n    "confirmedAt": coalesce(confirmedAt, _createdAt),\n    "category": category->{ _id, title, "slug": slug.current },\n    logo,\n    "cycle": cycle->{ _id, title, startDate, endDate, isActive },\n    "categoryRank": 1 + count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&\n      amount > ^.amount\n    ]),\n    "categoryTotal": count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref\n    ]),\n    "overallRank": 1 + count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref && amount > ^.amount\n    ]),\n    "overallTotal": count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref\n    ]),\n    "siblings": *[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&\n      _id != ^._id\n    ] | order(amount desc) [0...4] {\n      _id,\n      "slug": slug.current,\n      displayName,\n      companyName,\n      amount,\n      logo,\n      "rank": 1 + count(*[\n        _type == "leaderboardEntry" && status == "confirmed" &&\n        cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&\n        amount > ^.amount\n      ])\n    }\n  }\n': ENTRY_DETAIL_QUERY_RESULT;
+  }
+}
