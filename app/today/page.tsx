@@ -10,7 +10,7 @@ const FALLBACK_CAUSE_BLURB =
   "Site configuration hasn't been published in Sanity Studio yet.";
 const FALLBACK_MIN_INCREMENT = 0;
 
-export default async function Home({
+export default async function TodayPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
@@ -18,7 +18,7 @@ export default async function Home({
   const { q } = await searchParams;
   const { siteConfig, categories, entries } = await getLeaderboardData();
 
-  const scope: Scope = {};
+  const scope: Scope = { today: true };
   const minimumIncrement = siteConfig?.minimumIncrement ?? FALLBACK_MIN_INCREMENT;
   const topAmount = scopeTopAmount(filterEntries(entries, scope));
   const filtered = filterEntries(entries, { ...scope, q });
@@ -26,7 +26,7 @@ export default async function Home({
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 sm:px-8">
       <ClaimBand
-        key="all-all-time"
+        key="all-today"
         scope={scope}
         scopeTopAmount={topAmount}
         minimumIncrement={minimumIncrement}

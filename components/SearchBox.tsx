@@ -36,7 +36,7 @@ export function SearchBox() {
   }
 
   return (
-    <div className="flex h-9 items-center gap-1 rounded-full bg-surface pl-3 pr-1 shadow-sm dark:ring-1 dark:ring-white/5">
+    <div className="flex h-9 items-center gap-1 rounded-full bg-surface pl-3 pr-1 shadow-sm transition-shadow focus-within:ring-2 focus-within:ring-accent-300">
       <Search size={14} className="text-neutral-500" />
       <input
         autoFocus

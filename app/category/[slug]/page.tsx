@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { ClaimBand } from "@/components/leaderboard/ClaimBand";
 import { LeaderboardSection } from "@/components/leaderboard/LeaderboardSection";
 import { CauseCard } from "@/components/ui/Card";
@@ -10,15 +11,22 @@ const FALLBACK_CAUSE_BLURB =
   "Site configuration hasn't been published in Sanity Studio yet.";
 const FALLBACK_MIN_INCREMENT = 0;
 
-export default async function Home({
+export default async function CategoryPage({
+  params,
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ q?: string; today?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { slug } = await params;
+  const { q, today } = await searchParams;
   const { siteConfig, categories, entries } = await getLeaderboardData();
 
-  const scope: Scope = {};
+  if (!categories.some((c) => c.slug === slug)) {
+    notFound();
+  }
+
+  const scope: Scope = { categorySlug: slug, today: today === "true" };
   const minimumIncrement = siteConfig?.minimumIncrement ?? FALLBACK_MIN_INCREMENT;
   const topAmount = scopeTopAmount(filterEntries(entries, scope));
   const filtered = filterEntries(entries, { ...scope, q });
@@ -26,7 +34,7 @@ export default async function Home({
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 sm:px-8">
       <ClaimBand
-        key="all-all-time"
+        key={`${slug}-${scope.today ? "today" : "all-time"}`}
         scope={scope}
         scopeTopAmount={topAmount}
         minimumIncrement={minimumIncrement}

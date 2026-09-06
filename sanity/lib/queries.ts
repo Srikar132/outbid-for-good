@@ -36,6 +36,7 @@ export const CONFIRMED_ENTRIES_QUERY = defineQuery(/* groq */ `
   *[_type == "leaderboardEntry" && status == "confirmed" && cycle._ref == $cycleId]
   | order(amount desc) {
     _id,
+    "slug": slug.current,
     displayName,
     companyName,
     tagline,
@@ -44,6 +45,76 @@ export const CONFIRMED_ENTRIES_QUERY = defineQuery(/* groq */ `
     clickCount,
     "confirmedAt": coalesce(confirmedAt, _createdAt),
     "category": category->{ _id, title, "slug": slug.current },
-    "logoUrl": logo.asset->url
+    logo
+  }
+`)
+
+export const ENTRY_DETAIL_QUERY = defineQuery(/* groq */ `
+  *[_type == "leaderboardEntry" && status == "confirmed" && slug.current == $slug][0] {
+    _id,
+    "slug": slug.current,
+    displayName,
+    companyName,
+    tagline,
+    url,
+    amount,
+    clickCount,
+    raiseCount,
+    "confirmedAt": coalesce(confirmedAt, _createdAt),
+    "category": category->{ _id, title, "slug": slug.current },
+    logo,
+    "cycle": cycle->{ _id, title, startDate, endDate, isActive },
+    "categoryRank": 1 + count(*[
+      _type == "leaderboardEntry" && status == "confirmed" &&
+      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&
+      amount > ^.amount
+    ]),
+    "categoryTotal": count(*[
+      _type == "leaderboardEntry" && status == "confirmed" &&
+      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref
+    ]),
+    "overallRank": 1 + count(*[
+      _type == "leaderboardEntry" && status == "confirmed" &&
+      cycle._ref == ^.cycle._ref && amount > ^.amount
+    ]),
+    "overallTotal": count(*[
+      _type == "leaderboardEntry" && status == "confirmed" &&
+      cycle._ref == ^.cycle._ref
+    ]),
+    "siblings": *[
+      _type == "leaderboardEntry" && status == "confirmed" &&
+      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&
+      _id != ^._id
+    ] | order(amount desc) [0...4] {
+      _id,
+      "slug": slug.current,
+      displayName,
+      companyName,
+      amount,
+      logo,
+      "rank": 1 + count(*[
+        _type == "leaderboardEntry" && status == "confirmed" &&
+        cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&
+        amount > ^.amount
+      ])
+    }
+  }
+`)
+
+export const SCOPE_RANK_PREVIEW_QUERY = defineQuery(/* groq */ `
+  {
+    "rank": 1 + count(*[
+      _type == "leaderboardEntry" && status == "confirmed" &&
+      cycle._ref == $cycleId &&
+      ($categorySlug == null || category->slug.current == $categorySlug) &&
+      ($since == null || confirmedAt >= $since) &&
+      amount > $amount
+    ]),
+    "total": 1 + count(*[
+      _type == "leaderboardEntry" && status == "confirmed" &&
+      cycle._ref == $cycleId &&
+      ($categorySlug == null || category->slug.current == $categorySlug) &&
+      ($since == null || confirmedAt >= $since)
+    ])
   }
 `)

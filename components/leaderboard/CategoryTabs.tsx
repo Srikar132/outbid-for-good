@@ -1,17 +1,18 @@
-"use client";
-
-import { Category } from "@/lib/mock-data";
+import Link from "next/link";
+import { CategoryResult } from "@/sanity/lib/data";
 import { categoryIcons } from "@/lib/category-icons";
+import { Scope, categoryTabHref } from "@/lib/scope";
 
 export function CategoryTabs({
   categories,
-  active,
-  onChange,
+  scope,
+  q,
 }: {
-  categories: Category[];
-  active: string;
-  onChange: (slug: string) => void;
+  categories: CategoryResult[];
+  scope: Scope;
+  q?: string;
 }) {
+  const active = scope.categorySlug ?? "all";
   const tabs = [{ slug: "all", title: "All" }, ...categories];
 
   return (
@@ -20,9 +21,9 @@ export function CategoryTabs({
         const isActive = tab.slug === active;
         const Icon = categoryIcons[tab.slug];
         return (
-          <button
+          <Link
             key={tab.slug}
-            onClick={() => onChange(tab.slug)}
+            href={categoryTabHref(tab.slug, scope, q)}
             className={`text-body flex items-center gap-1.5 rounded-full px-4 py-2 font-semibold transition-colors ${
               isActive
                 ? "bg-accent-500 text-white"
@@ -31,7 +32,7 @@ export function CategoryTabs({
           >
             {Icon && <Icon size={14} />}
             {tab.title}
-          </button>
+          </Link>
         );
       })}
     </div>

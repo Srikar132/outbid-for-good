@@ -32,7 +32,7 @@
   --color-neutral-300: #98a2b3;
   --color-neutral-200: #d0d5dd;
   --color-neutral-100: #f1f5f2;
-  --color-neutral-50: #fafcfa;
+  --color-neutral-50: #ffffff;
   --color-white: #ffffff;
 
   /* Semantic */
@@ -174,6 +174,22 @@ body {
   --color-accent-50: #2f1e14;
   --color-accent-100: #4a2712;
   --color-primary-100: #16301f;
+}
+
+/* Focus is styled once, deliberately, instead of falling back to the
+   browser default outline (which clashes with this palette). Mouse/touch
+   activation stays quiet; keyboard navigation gets a visible accent ring.
+   Wrapped in :where() (zero specificity) so any element that opts out with
+   its own `outline-none` — e.g. an input inside a pill that draws its own
+   focus-within ring on the container instead — reliably wins, regardless
+   of source order against Tailwind's generated utility classes. */
+:focus {
+  outline: none;
+}
+:where(:focus-visible) {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
 }
 
 .dark .bg-info\/10 {

@@ -97,18 +97,12 @@ export function CauseCard({
   description: string;
 }) {
   return (
-    <Card>
-      <div className="flex h-32 items-center justify-center rounded-md bg-primary-100">
-        <Leaf size={32} className="text-primary-400" />
+    <div className="border-t border-neutral-200 pt-6">
+      <div className="flex items-center gap-2">
+        <Leaf size={18} className="text-primary-400" />
+        <h2 className="text-h3 text-neutral-900">{title}</h2>
       </div>
-      <p className="text-small mt-3 font-semibold uppercase tracking-wide text-neutral-500">
-        Our Cause
-      </p>
-      <p className="text-h3 mt-1 text-neutral-900">{title}</p>
-      <p className="text-body mt-1 text-neutral-500">{description}</p>
-      <a href="#" className="text-small mt-3 inline-block font-semibold text-primary-500">
-        Learn more about this cause &rarr;
-      </a>
-    </Card>
+      <p className="text-body mt-2 max-w-2xl text-neutral-500">{description}</p>
+    </div>
   );
 }

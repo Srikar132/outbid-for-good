@@ -19,6 +19,14 @@ export const leaderboardEntry = defineType({
       type: 'string',
     }),
     defineField({
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      description: 'Used in the public entry URL: /entry/<slug>.',
+      options: { source: 'displayName' },
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
       name: 'logo',
       title: 'Logo',
       type: 'image',
@@ -64,6 +72,15 @@ export const leaderboardEntry = defineType({
       type: 'number',
       initialValue: 0,
       validation: (rule) => rule.min(0),
+    }),
+    defineField({
+      name: 'raiseCount',
+      title: 'Raise count',
+      type: 'number',
+      description:
+        'How many confirmed payments this entry represents. Defaults to 1 (one payment = one entry). Only bump this by hand if you record an offline top-up donation against this same entry — the payment flow does not increment it automatically.',
+      initialValue: 1,
+      validation: (rule) => rule.min(1),
     }),
     defineField({
       name: 'razorpayOrderId',

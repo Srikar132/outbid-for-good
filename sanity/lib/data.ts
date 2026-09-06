@@ -2,14 +2,17 @@ import type {
   ACTIVE_CYCLE_QUERY_RESULT,
   CATEGORIES_QUERY_RESULT,
   CONFIRMED_ENTRIES_QUERY_RESULT,
+  ENTRY_DETAIL_QUERY_RESULT,
   SITE_CONFIG_QUERY_RESULT,
 } from '@/sanity.types'
-import { fetchCached } from './client'
+import { client, fetchCached } from './client'
 import { sanityFetch } from './live'
 import {
   ACTIVE_CYCLE_QUERY,
   CATEGORIES_QUERY,
   CONFIRMED_ENTRIES_QUERY,
+  ENTRY_DETAIL_QUERY,
+  SCOPE_RANK_PREVIEW_QUERY,
   SITE_CONFIG_QUERY,
 } from './queries'
 
@@ -17,6 +20,7 @@ export type CategoryResult = CATEGORIES_QUERY_RESULT[number]
 export type CycleResult = NonNullable<ACTIVE_CYCLE_QUERY_RESULT>
 export type SiteConfigResult = NonNullable<SITE_CONFIG_QUERY_RESULT>
 export type LeaderboardEntryResult = CONFIRMED_ENTRIES_QUERY_RESULT[number]
+export type EntryDetailResult = NonNullable<ENTRY_DETAIL_QUERY_RESULT>
 
 export function getCategories() {
   return fetchCached(CATEGORIES_QUERY, {}, 3600)
@@ -33,6 +37,20 @@ export function getSiteConfig() {
 export async function getConfirmedEntries(cycleId: string) {
   const { data } = await sanityFetch({ query: CONFIRMED_ENTRIES_QUERY, params: { cycleId } })
   return data
+}
+
+export async function getEntryDetail(slug: string) {
+  const { data } = await sanityFetch({ query: ENTRY_DETAIL_QUERY, params: { slug } })
+  return data
+}
+
+export function getScopeRankPreview(params: {
+  cycleId: string
+  categorySlug: string | null
+  since: string | null
+  amount: number
+}) {
+  return client.fetch(SCOPE_RANK_PREVIEW_QUERY, params)
 }
 
 export async function getLeaderboardData() {
