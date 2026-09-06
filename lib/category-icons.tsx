@@ -6,3 +6,5 @@ export const categoryIcons: Record<string, LucideIcon> = {
   company: Building2,
   brand: Megaphone,
 };
+
+export const defaultCategoryIcon: LucideIcon = LayoutGrid;
