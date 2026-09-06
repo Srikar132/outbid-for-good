@@ -1,6 +1,6 @@
 "use client";
 
-import { Category } from "@/lib/mock-data";
+import { CategoryResult } from "@/sanity/lib/data";
 import { categoryIcons } from "@/lib/category-icons";
 
 export function CategoryTabs({
@@ -8,7 +8,7 @@ export function CategoryTabs({
   active,
   onChange,
 }: {
-  categories: Category[];
+  categories: CategoryResult[];
   active: string;
   onChange: (slug: string) => void;
 }) {

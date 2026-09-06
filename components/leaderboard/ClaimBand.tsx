@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Minus, Plus, ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { Category } from "@/lib/mock-data";
+import { CategoryResult } from "@/sanity/lib/data";
 import { categoryIcons } from "@/lib/category-icons";
 
 export function ClaimBand({
@@ -13,7 +13,7 @@ export function ClaimBand({
 }: {
   nextMinBid: number;
   minimumIncrement: number;
-  categories: Category[];
+  categories: CategoryResult[];
 }) {
   const [amount, setAmount] = useState(nextMinBid);
   const [name, setName] = useState("");

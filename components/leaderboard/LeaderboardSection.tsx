@@ -2,29 +2,28 @@
 
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Category, LeaderboardEntry } from "@/lib/mock-data";
+import { CategoryResult, LeaderboardEntryResult } from "@/sanity/lib/data";
+import { DAY_MS } from "@/lib/format";
 import { CategoryTabs } from "./CategoryTabs";
 import { ViewToggle, ViewMode } from "./ViewToggle";
 import { LeaderboardList } from "./LeaderboardList";
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function LeaderboardSection({
   entries,
   categories,
 }: {
-  entries: LeaderboardEntry[];
-  categories: Category[];
+  entries: LeaderboardEntryResult[];
+  categories: CategoryResult[];
 }) {
-  const [category, setCategory] = useState("all");
+  const searchParams = useSearchParams();
+  const [category, setCategory] = useState(searchParams.get("category") ?? "all");
   const [view, setView] = useState<ViewMode>("all-time");
   const [now] = useState(() => Date.now());
-  const searchParams = useSearchParams();
   const query = searchParams.get("q")?.trim().toLowerCase() ?? "";
 
   const filtered = useMemo(() => {
     return entries
-      .filter((e) => category === "all" || e.categorySlug === category)
+      .filter((e) => category === "all" || e.category.slug === category)
       .filter((e) => {
         if (view === "all-time") return true;
         return now - new Date(e.confirmedAt).getTime() <= DAY_MS;
