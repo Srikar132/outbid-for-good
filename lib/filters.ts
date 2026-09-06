@@ -8,7 +8,7 @@ export function filterEntries(
   const query = q?.trim().toLowerCase() ?? "";
 
   return entries
-    .filter((e) => !categorySlug || e.category.slug === categorySlug)
+    .filter((e) => !categorySlug || e.category?.slug === categorySlug)
     .filter((e) => !today || isWithinLastDay(e.confirmedAt))
     .filter((e) => {
       if (!query) return true;
