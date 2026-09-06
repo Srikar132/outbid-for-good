@@ -92,7 +92,7 @@ export function ClaimBand({
       <div className="flex items-center gap-3">
         <button
           onClick={() => step(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition-colors hover:border-accent-300 hover:text-accent-500"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition-colors hover:border-accent-300 hover:text-accent-500"
           aria-label="Decrease amount"
         >
           <Minus size={16} />
@@ -103,7 +103,7 @@ export function ClaimBand({
         </h1>
         <button
           onClick={() => step(1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition-colors hover:border-accent-300 hover:text-accent-500"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition-colors hover:border-accent-300 hover:text-accent-500"
           aria-label="Increase amount"
         >
           <Plus size={16} />
@@ -139,7 +139,7 @@ export function ClaimBand({
               : `Category: ${selected?.title ?? "choose one"}`
           }
           disabled={categoryLocked}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 transition-colors disabled:cursor-default enabled:hover:bg-neutral-200"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 transition-colors disabled:cursor-default enabled:hover:bg-neutral-200"
         >
           {SelectedIcon && <SelectedIcon size={16} />}
         </button>
@@ -162,8 +162,8 @@ export function ClaimBand({
         <input
           value={identityInput}
           onChange={(e) => setIdentityInput(e.target.value)}
-          placeholder="Website URL or @handle"
-          className="text-body h-11 flex-1 bg-transparent px-1 text-neutral-900 outline-none"
+          placeholder="URL or @handle"
+          className="text-body h-11 min-w-0 flex-1 bg-transparent px-1 text-neutral-900 outline-none"
         />
 
         <Link

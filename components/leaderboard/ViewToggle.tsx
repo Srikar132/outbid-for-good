@@ -11,7 +11,7 @@ export function ViewToggle({ scope, q }: { scope: Scope; q?: string }) {
   ];
 
   return (
-    <div className="inline-flex rounded-full bg-accent-50 p-1">
+    <div className="inline-flex shrink-0 self-start rounded-full bg-accent-50 p-1 sm:self-auto">
       {options.map((opt) => (
         <Link
           key={opt.mode}
