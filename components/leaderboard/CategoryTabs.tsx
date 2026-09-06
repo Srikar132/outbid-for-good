@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Compass } from "lucide-react";
 import { CategoryResult } from "@/sanity/lib/data";
 import { categoryIcons } from "@/lib/category-icons";
 import { Scope, categoryTabHref } from "@/lib/scope";
@@ -35,6 +36,13 @@ export function CategoryTabs({
           </Link>
         );
       })}
+      <Link
+        href="/categories"
+        className="text-body flex items-center gap-1.5 rounded-full bg-surface px-4 py-2 font-semibold text-neutral-700 transition-colors hover:bg-accent-50 dark:ring-1 dark:ring-white/5"
+      >
+        <Compass size={14} />
+        Explore
+      </Link>
     </div>
   );
 }
