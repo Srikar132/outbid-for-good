@@ -111,24 +111,29 @@ body {
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
 }
 
-/* Type scale */
+/* Type scale — display/h1/h2 use clamp() so hero-sized headings shrink
+   proportionally on small viewports instead of staying pinned at their
+   desktop size (these are plain CSS classes, not Tailwind utilities, so
+   `sm:text-h1`-style variants don't apply here). Line-height is unitless
+   so it scales with the clamped font-size automatically. h3/body/small
+   are already small enough to stay fixed at every breakpoint. */
 .text-display {
   font-family: var(--font-sora);
   font-weight: 700;
-  font-size: 48px;
-  line-height: 56px;
+  font-size: clamp(2rem, 1.4rem + 2.5vw, 3rem);
+  line-height: 1.15;
 }
 .text-h1 {
   font-family: var(--font-sora);
   font-weight: 700;
-  font-size: 32px;
-  line-height: 40px;
+  font-size: clamp(1.5rem, 1.2rem + 1.25vw, 2rem);
+  line-height: 1.25;
 }
 .text-h2 {
   font-family: var(--font-sora);
   font-weight: 600;
-  font-size: 24px;
-  line-height: 32px;
+  font-size: clamp(1.25rem, 1.1rem + 0.65vw, 1.5rem);
+  line-height: 1.3;
 }
 .text-h3 {
   font-family: var(--font-sora);

@@ -18,25 +18,29 @@ export function Nav({
 
   return (
     <header className="sticky top-0 z-10 border-b border-neutral-200 bg-cream/90 backdrop-blur">
-      <nav className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2">
-            <Crown size={20} className="text-accent-500" fill="currentColor" />
-            <span className="text-h3 text-neutral-900">OUTBID</span>
-          </Link>
-          {stats && (
-            <span className="text-small hidden items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-neutral-500 shadow-sm sm:inline-flex dark:ring-1 dark:ring-white/5">
-              <span className="h-1.5 w-1.5 rounded-full bg-success" />₹
-              {stats.totalRaised.toLocaleString("en-IN")} raised &middot;{" "}
-              {stats.donorCount} donors
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2 sm:gap-4">
-          <Link href="/about" className="text-body hidden text-neutral-700 sm:inline">
+      <nav className="mx-auto flex w-full max-w-5xl flex-nowrap items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-8">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          <Crown size={20} className="text-accent-500" fill="currentColor" />
+          <span className="text-h3 text-neutral-900">OUTBID</span>
+        </Link>
+        {stats && (
+          <span className="text-small hidden shrink-0 items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-neutral-500 shadow-sm sm:inline-flex dark:ring-1 dark:ring-white/5">
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />₹
+            {stats.totalRaised.toLocaleString("en-IN")} raised &middot;{" "}
+            {stats.donorCount} donors
+          </span>
+        )}
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
+          <Link
+            href="/about"
+            className="text-body flex h-9 items-center whitespace-nowrap rounded-full px-2 text-neutral-700 transition-colors hover:bg-neutral-100 sm:px-3"
+          >
             About
           </Link>
-          <Link href="#cause" className="text-body hidden text-neutral-700 sm:inline">
+          <Link
+            href="#cause"
+            className="text-body hidden h-9 items-center whitespace-nowrap rounded-full px-3 text-neutral-700 transition-colors hover:bg-neutral-100 sm:flex"
+          >
             Our Cause
           </Link>
           <Suspense fallback={<div className="h-9 w-9" />}>
