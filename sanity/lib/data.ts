@@ -1,5 +1,11 @@
-import { client } from './client'
-import { token } from './token'
+import type {
+  ACTIVE_CYCLE_QUERY_RESULT,
+  CATEGORIES_QUERY_RESULT,
+  CONFIRMED_ENTRIES_QUERY_RESULT,
+  SITE_CONFIG_QUERY_RESULT,
+} from '@/sanity.types'
+import { fetchCached } from './client'
+import { sanityFetch } from './live'
 import {
   ACTIVE_CYCLE_QUERY,
   CATEGORIES_QUERY,
@@ -7,63 +13,26 @@ import {
   SITE_CONFIG_QUERY,
 } from './queries'
 
-export type CategoryResult = {
-  _id: string
-  title: string
-  slug: string
-  description: string | null
-}
-
-export type CycleResult = {
-  _id: string
-  title: string | null
-  startDate: string
-  endDate: string
-  isActive: boolean
-}
-
-export type SiteConfigResult = {
-  _id: string
-  causeTitle: string
-  causeBlurb: string
-  fundMessage: string
-  minimumIncrement: number
-  creatorName: string | null
-  creatorPhotoUrl: string | null
-  creatorBlurb: string | null
-}
-
-export type LeaderboardEntryResult = {
-  _id: string
-  displayName: string
-  companyName: string | null
-  tagline: string | null
-  url: string
-  amount: number
-  clickCount: number
-  confirmedAt: string | null
-  category: { _id: string; title: string; slug: string } | null
-  logoUrl: string | null
-}
-
-// Server-only: reads with a read token against the live API, never the CDN,
-// since a stale leaderboard read is worse than a slightly slower one here.
-const serverClient = client.withConfig({ token, useCdn: false })
+export type CategoryResult = CATEGORIES_QUERY_RESULT[number]
+export type CycleResult = NonNullable<ACTIVE_CYCLE_QUERY_RESULT>
+export type SiteConfigResult = NonNullable<SITE_CONFIG_QUERY_RESULT>
+export type LeaderboardEntryResult = CONFIRMED_ENTRIES_QUERY_RESULT[number]
 
 export function getCategories() {
-  return serverClient.fetch<CategoryResult[]>(CATEGORIES_QUERY)
+  return fetchCached(CATEGORIES_QUERY, {}, 3600)
 }
 
 export function getActiveCycle() {
-  return serverClient.fetch<CycleResult | null>(ACTIVE_CYCLE_QUERY)
+  return fetchCached(ACTIVE_CYCLE_QUERY, {}, 60)
 }
 
 export function getSiteConfig() {
-  return serverClient.fetch<SiteConfigResult | null>(SITE_CONFIG_QUERY)
+  return fetchCached(SITE_CONFIG_QUERY, {}, 3600)
 }
 
-export function getConfirmedEntries(cycleId: string) {
-  return serverClient.fetch<LeaderboardEntryResult[]>(CONFIRMED_ENTRIES_QUERY, { cycleId })
+export async function getConfirmedEntries(cycleId: string) {
+  const { data } = await sanityFetch({ query: CONFIRMED_ENTRIES_QUERY, params: { cycleId } })
+  return data
 }
 
 export async function getLeaderboardData() {

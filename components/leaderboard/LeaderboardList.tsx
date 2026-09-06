@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LeaderboardEntry, categories, getHostname } from "@/lib/mock-data";
 import { categoryIcons } from "@/lib/category-icons";
 
@@ -73,9 +74,9 @@ export function LeaderboardList({ entries }: { entries: LeaderboardEntry[] }) {
                 <span>&middot;</span>
                 <span>{entry.clickCount} clicks</span>
                 <span>&middot;</span>
-                <a href={`/api/click/${entry.id}`} className="font-semibold text-primary-500">
+                <Link href={`/entry/${entry.id}`} className="font-semibold text-primary-500">
                   see details
-                </a>
+                </Link>
               </p>
             </div>
             <span className="text-h3 shrink-0 pt-1 text-accent-500">
