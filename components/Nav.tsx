@@ -31,25 +31,19 @@ export function Nav({
           )}
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
-          <Link
-            href="/"
-            className="text-body hidden font-semibold text-primary-500 sm:inline"
-          >
-            Leaderboard
-          </Link>
-          <Link href="/#cause" className="text-body hidden text-neutral-700 sm:inline">
+          <Link href="#cause" className="text-body hidden text-neutral-700 sm:inline">
             Our Cause
           </Link>
           <Suspense fallback={<div className="h-9 w-9" />}>
             {pathname === "/" && <SearchBox />}
           </Suspense>
           <ThemeToggle />
-          <Link
+          {/* <Link
             href="/donate"
             className="inline-flex h-10 items-center justify-center rounded-md bg-accent-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-400"
           >
             Outbid Now
-          </Link>
+          </Link> */}
         </div>
       </nav>
     </header>

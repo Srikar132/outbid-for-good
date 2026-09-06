@@ -1,6 +1,7 @@
 node_modules
 dist
 .sanity
+schema.json
 .env
 *.tsbuildinfo
 .DS_Store

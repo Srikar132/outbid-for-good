@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Sora, Inter } from "next/font/google";
 import { Providers } from "./providers";
+import { SanityLive } from "@/sanity/lib/live";
 import "./globals.css";
 
 const sora = Sora({
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
+        <SanityLive />
       </body>
     </html>
   );

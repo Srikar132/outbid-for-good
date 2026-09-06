@@ -42,7 +42,7 @@ export const CONFIRMED_ENTRIES_QUERY = defineQuery(/* groq */ `
     url,
     amount,
     clickCount,
-    confirmedAt,
+    "confirmedAt": coalesce(confirmedAt, _createdAt),
     "category": category->{ _id, title, "slug": slug.current },
     "logoUrl": logo.asset->url
   }
