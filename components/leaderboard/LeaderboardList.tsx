@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { AtSign } from "lucide-react";
 import { LeaderboardEntryResult } from "@/sanity/lib/data";
 import { formatAmount, timeAgo } from "@/lib/format";
 import { categoryIcons } from "@/lib/category-icons";
+import { faviconUrlFor, isHandleStyleUrl } from "@/lib/identity";
 
 const logoTint: Record<string, string> = {
   individual: "bg-primary-100 text-primary-500",
@@ -48,11 +50,16 @@ export function LeaderboardList({ entries }: { entries: LeaderboardEntryResult[]
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-2xs sm:h-11 sm:w-11"
             >
               <div
-                className={`flex h-full w-full items-center justify-center rounded-xl ${
+                className={`flex h-full w-full items-center justify-center overflow-hidden rounded-xl ${
                   logoTint[entry.category.slug] ?? "bg-neutral-900 text-white"
                 }`}
               >
-                {CategoryIcon ? (
+                {entry.url && isHandleStyleUrl(entry.url) ? (
+                  <AtSign size={18} />
+                ) : entry.url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={faviconUrlFor(entry.url)} alt="" className="h-5 w-5" />
+                ) : CategoryIcon ? (
                   <CategoryIcon size={18} />
                 ) : (
                   <span className="text-small font-bold">{name.charAt(0)}</span>

@@ -27,12 +27,6 @@ export const leaderboardEntry = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
-      name: 'logo',
-      title: 'Logo',
-      type: 'image',
-      options: { hotspot: true },
-    }),
-    defineField({
       name: 'url',
       title: 'Website / handle URL',
       type: 'url',
@@ -120,13 +114,11 @@ export const leaderboardEntry = defineType({
       title: 'displayName',
       amount: 'amount',
       status: 'status',
-      media: 'logo',
     },
-    prepare({ title, amount, status, media }) {
+    prepare({ title, amount, status }) {
       return {
         title,
         subtitle: `₹${amount ?? 0} · ${status}`,
-        media,
       }
     },
   },

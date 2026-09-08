@@ -10,7 +10,7 @@ import posthog from "posthog-js";
 import { Scope } from "@/lib/scope";
 import { faviconUrlFor, parseIdentity } from "@/lib/identity";
 import { z } from "zod";
-import { claimFieldsSchema, MAX_TAGLINE_LENGTH, MAX_LOGO_BYTES } from "@/lib/validation/claim";
+import { claimFieldsSchema, MAX_TAGLINE_LENGTH } from "@/lib/validation/claim";
 import { createClaim, ClaimError, ClaimState } from "@/app/donate/actions";
 
 type PaymentPhase = "idle" | "submitted" | "cancelled" | "failed";
@@ -43,8 +43,6 @@ function claimErrorMessage(error: ClaimError): string {
       return "That category no longer exists.";
     case "OUTBID":
       return `Someone else has claimed this. The current floor is ₹${error.floor.toLocaleString("en-IN")}.`;
-    case "UPLOAD_FAILED":
-      return "Couldn't upload logo. Try again.";
     case "ENTRY_CREATE_FAILED":
       return "Couldn't save your claim. Try again.";
     case "ORDER_CREATE_FAILED":
@@ -82,9 +80,6 @@ export function ConfirmClaim({
   const [company, setCompany] = useState("");
   const [url, setUrl] = useState(initialUrl);
   const [tagline, setTagline] = useState("");
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [logoError, setLogoError] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [paymentPhase, setPaymentPhase] = useState<PaymentPhase>("idle");
   const [scriptReady, setScriptReady] = useState(false);
@@ -123,50 +118,10 @@ export function ConfirmClaim({
   const taglineError = serverFieldErrors?.tagline ?? clientFieldErrors.tagline;
 
   const identity = parseIdentity(url.trim());
-  const canSubmit = agreed && clientValidation.success && !logoError && !pending;
+  const canSubmit = agreed && clientValidation.success && !pending;
 
-  const avatarSrc = logoPreview ?? (identity ? faviconUrlFor(identity.url) : null);
+  const avatarSrc = identity ? faviconUrlFor(identity.url) : null;
   const previewSubtitle = [company.trim(), tagline.trim()].filter(Boolean).join(" · ");
-
-  const logoPreviewRef = useRef(logoPreview);
-  useEffect(() => {
-    logoPreviewRef.current = logoPreview;
-  }, [logoPreview]);
-  useEffect(() => {
-    return () => {
-      if (logoPreviewRef.current) URL.revokeObjectURL(logoPreviewRef.current);
-    };
-  }, []);
-
-  const handleLogoChange = (file: File | null) => {
-    setLogoError(null);
-    if (logoPreview) URL.revokeObjectURL(logoPreview);
-
-    if (!file) {
-      setLogoFile(null);
-      setLogoPreview(null);
-      return;
-    }
-    if (!file.type.startsWith("image/")) {
-      setLogoError("File must be an image.");
-      setLogoFile(null);
-      setLogoPreview(null);
-      return;
-    }
-    if (file.size > MAX_LOGO_BYTES) {
-      setLogoError("Image must be under 2MB.");
-      setLogoFile(null);
-      setLogoPreview(null);
-      return;
-    }
-    setLogoFile(file);
-    setLogoPreview(URL.createObjectURL(file));
-    posthog.capture("logo_uploaded", {
-      file_type: file.type,
-      file_size_kb: Math.round(file.size / 1024),
-      category: categorySlug,
-    });
-  };
 
   useEffect(() => {
     if (state.status !== "success") return;
@@ -181,7 +136,6 @@ export function ConfirmClaim({
       category: categorySlug,
       scope_category: scope.categorySlug ?? null,
       scope_today: !!scope.today,
-      has_logo: !!logoFile,
       has_tagline: !!tagline.trim(),
       has_company: !!company.trim(),
     });
@@ -374,18 +328,6 @@ export function ConfirmClaim({
           {taglineError?.[0] && (
             <span className="text-small mt-1 block font-normal text-error">{taglineError[0]}</span>
           )}
-        </label>
-
-        <label className={labelClass}>
-          Logo (optional)
-          <input
-            name="logo"
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleLogoChange(e.target.files?.[0] ?? null)}
-            className="text-body mt-1 block w-full text-neutral-700 file:mr-3 file:rounded-md file:border-0 file:bg-neutral-100 file:px-3 file:py-2 file:text-small file:font-semibold"
-          />
-          {logoError && <span className="text-small mt-1 block font-normal text-error">{logoError}</span>}
         </label>
 
         <label className="text-small mt-1 flex items-start gap-2 rounded-md border border-neutral-200 bg-neutral-50 p-3 text-neutral-700">

@@ -44,8 +44,7 @@ export const CONFIRMED_ENTRIES_QUERY = defineQuery(/* groq */ `
     amount,
     clickCount,
     "confirmedAt": coalesce(confirmedAt, _createdAt),
-    "category": category->{ _id, title, "slug": slug.current },
-    logo
+    "category": category->{ _id, title, "slug": slug.current }
   }
 `)
 
@@ -62,7 +61,6 @@ export const ENTRY_DETAIL_QUERY = defineQuery(/* groq */ `
     raiseCount,
     "confirmedAt": coalesce(confirmedAt, _createdAt),
     "category": category->{ _id, title, "slug": slug.current },
-    logo,
     "cycle": cycle->{ _id, title, startDate, endDate, isActive },
     "categoryRank": 1 + count(*[
       _type == "leaderboardEntry" && status == "confirmed" &&
@@ -91,7 +89,6 @@ export const ENTRY_DETAIL_QUERY = defineQuery(/* groq */ `
       displayName,
       companyName,
       amount,
-      logo,
       "rank": 1 + count(*[
         _type == "leaderboardEntry" && status == "confirmed" &&
         cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&

@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import Razorpay from "razorpay";
-import { claimFieldsSchema, logoFileSchema } from "@/lib/validation/claim";
+import { claimFieldsSchema } from "@/lib/validation/claim";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/request";
 import { moderateNames } from "@/lib/moderation";
@@ -18,9 +18,8 @@ import { writeClient } from "@/sanity/lib/writeClient";
 import { getPostHogClient } from "@/lib/posthog-server";
 
 const ORDER_RATE_LIMIT = { max: 5, windowMs: 60_000 };
-const UPLOAD_RATE_LIMIT = { max: 5, windowMs: 60_000 };
 
-export type ClaimField = "displayName" | "companyName" | "url" | "tagline" | "logo";
+export type ClaimField = "displayName" | "companyName" | "url" | "tagline";
 
 export type ClaimError =
   | { code: "VALIDATION"; fieldErrors: Partial<Record<ClaimField, string[]>> }
@@ -29,7 +28,6 @@ export type ClaimError =
   | { code: "NO_ACTIVE_CYCLE" }
   | { code: "CATEGORY_NOT_FOUND" }
   | { code: "OUTBID"; floor: number }
-  | { code: "UPLOAD_FAILED" }
   | { code: "ENTRY_CREATE_FAILED" }
   | { code: "ORDER_CREATE_FAILED" }
   | { code: "SERVER_MISCONFIGURED" };
@@ -78,17 +76,9 @@ export async function createClaim(
     tagline: formData.get("tagline"),
   });
 
-  const logoEntry = formData.get("logo");
-  const logoFile = logoEntry instanceof File && logoEntry.size > 0 ? logoEntry : null;
-  const logoResult = logoFile ? logoFileSchema.safeParse(logoFile) : null;
-
-  if (!parsed.success || (logoResult && !logoResult.success)) {
-    const fieldErrors: Partial<Record<ClaimField, string[]>> = parsed.success
-      ? {}
-      : (z.flattenError(parsed.error).fieldErrors as Partial<Record<ClaimField, string[]>>);
-    if (logoResult && !logoResult.success) {
-      fieldErrors.logo = logoResult.error.issues.map((issue) => issue.message);
-    }
+  if (!parsed.success) {
+    const fieldErrors = z.flattenError(parsed.error)
+      .fieldErrors as Partial<Record<ClaimField, string[]>>;
     return { status: "error", error: { code: "VALIDATION", fieldErrors } };
   }
 
@@ -151,23 +141,6 @@ export async function createClaim(
     return { status: "error", error: { code: "SERVER_MISCONFIGURED" } };
   }
 
-  let logoAssetId: string | undefined;
-  if (logoFile) {
-    if (!checkRateLimit(`upload:${ip}`, UPLOAD_RATE_LIMIT)) {
-      return { status: "error", error: { code: "RATE_LIMITED" } };
-    }
-    try {
-      const buffer = Buffer.from(await logoFile.arrayBuffer());
-      const asset = await writeClient.assets.upload("image", buffer, {
-        filename: logoFile.name,
-        contentType: logoFile.type,
-      });
-      logoAssetId = asset._id;
-    } catch {
-      return { status: "error", error: { code: "UPLOAD_FAILED" } };
-    }
-  }
-
   const slug = slugify(displayName);
 
   let entry: { _id: string };
@@ -179,9 +152,6 @@ export async function createClaim(
       slug: { _type: "slug", current: slug },
       url,
       tagline: tagline || undefined,
-      logo: logoAssetId
-        ? { _type: "image", asset: { _type: "reference", _ref: logoAssetId } }
-        : undefined,
       amount,
       status: "pending",
       clickCount: 0,
@@ -218,7 +188,6 @@ export async function createClaim(
           entry_category: entryCategorySlug,
           scope_category: scopeCategorySlug,
           scope_today: today,
-          has_logo: !!logoAssetId,
           has_tagline: !!tagline,
           has_company: !!companyName,
           razorpay_order_id: order.id,
