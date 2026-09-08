@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Crown, ArrowUpRight } from "lucide-react";
+import { Crown, ArrowUpRight, AtSign } from "lucide-react";
 import { EntryDetailResult } from "@/sanity/lib/data";
 import { formatAmount, isWithinLastDay, timeAgo } from "@/lib/format";
 import { categoryIcons } from "@/lib/category-icons";
-import { SanityImage } from "@/components/SanityImage";
+import { faviconUrlFor, isHandleStyleUrl } from "@/lib/identity";
 import { CopyLinkButton } from "./CopyLinkButton";
 
 function StatCard({
@@ -97,12 +97,14 @@ export function EntryDetailView({
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-accent-50 text-accent-500 shadow-sm">
-            {entry.logo ? (
-              <SanityImage
-                value={entry.logo}
-                width={128}
+            {entry.url && isHandleStyleUrl(entry.url) ? (
+              <AtSign size={28} />
+            ) : entry.url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={faviconUrlFor(entry.url)}
                 alt=""
-                className="h-full w-full object-cover"
+                className="h-8 w-8 object-contain"
               />
             ) : (
               CategoryIcon && <CategoryIcon size={28} />

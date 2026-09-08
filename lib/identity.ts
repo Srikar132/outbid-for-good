@@ -37,6 +37,18 @@ export function faviconUrlFor(url: string): string {
   return `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(url)}`;
 }
 
+// A stored entry URL that resolved from an @handle (see parseIdentity) always
+// lands on instagram.com — Instagram's own favicon is identical for every
+// handle, so callers show a generic @ icon instead of a real favicon there,
+// same as the pre-submission preview in ClaimBand/ConfirmClaim.
+export function isHandleStyleUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "").toLowerCase() === "instagram.com";
+  } catch {
+    return false;
+  }
+}
+
 export function isValidHttpUrl(value: string): boolean {
   try {
     const url = new URL(value);

@@ -3,7 +3,6 @@ import { parseIdentity } from "@/lib/identity";
 
 export const MAX_NAME_LENGTH = 60;
 export const MAX_TAGLINE_LENGTH = 140;
-export const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 
 // FormData/inputs send "" for an untouched optional field — treat that as
 // absent instead of failing max-length/shape checks on an empty string.
@@ -45,8 +44,3 @@ export const claimFieldsSchema = z.object({
 });
 
 export type ClaimFields = z.infer<typeof claimFieldsSchema>;
-
-export const logoFileSchema = z
-  .instanceof(File)
-  .refine((file) => file.type.startsWith("image/"), "File must be an image.")
-  .refine((file) => file.size <= MAX_LOGO_BYTES, "Image must be under 2MB.");
