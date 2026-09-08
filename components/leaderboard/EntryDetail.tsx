@@ -111,7 +111,7 @@ export function EntryDetailView({
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-h2 text-neutral-900">{name}</h1>
+              <h1 className="text-h2 break-words text-neutral-900">{name}</h1>
               {isOverallTop && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-accent-500 px-2.5 py-1 text-[11px] font-semibold text-white">
                   <Crown size={12} fill="currentColor" /> Current #1

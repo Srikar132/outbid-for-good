@@ -46,32 +46,37 @@ export function LeaderboardList({ entries }: { entries: LeaderboardEntryResult[]
               #{index + 1}
             </span>
 
-            <a
-              href={`/api/click/${entry._id}`}
-              className="flex min-w-0 flex-1 items-center gap-4"
-            >
-              <div
-                className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-2xs ${
-                  logoTint[entry.category.slug] ?? "bg-neutral-900 text-white"
-                }`}
+            <div className="flex min-w-0 flex-1 items-center gap-4">
+              <a
+                href={`/api/click/${entry._id}`}
+                className="flex shrink-0 items-center justify-center"
               >
-                {CategoryIcon ? (
-                  <CategoryIcon size={24} />
-                ) : (
-                  <span className="text-h3 font-bold">{name.charAt(0)}</span>
-                )}
-              </div>
+                <div
+                  className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-2xs ${
+                    logoTint[entry.category.slug] ?? "bg-neutral-900 text-white"
+                  }`}
+                >
+                  {CategoryIcon ? (
+                    <CategoryIcon size={24} />
+                  ) : (
+                    <span className="text-h3 font-bold">{name.charAt(0)}</span>
+                  )}
+                </div>
+              </a>
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-2">
-                  <p className="text-body-lg font-bold text-neutral-900 transition-colors group-hover:text-accent-500">
+                  <a
+                    href={`/api/click/${entry._id}`}
+                    className="text-body-lg font-bold text-neutral-900 transition-colors hover:text-accent-500 group-hover:text-accent-500"
+                  >
                     {name}
-                  </p>
+                  </a>
                 </div>
                 {entry.tagline && (
                   <p className="text-body mt-0.5 line-clamp-1 text-neutral-700">{entry.tagline}</p>
                 )}
-                <p className="text-small mt-1.5 flex flex-wrap items-center gap-2 text-neutral-500">
+                <div className="text-small mt-1.5 flex flex-wrap items-center gap-2 text-neutral-500">
                   {CategoryIcon && <CategoryIcon size={12} className="text-neutral-500" />}
                   <span>{entry.category.title}</span>
                   <span>&bull;</span>
@@ -79,7 +84,12 @@ export function LeaderboardList({ entries }: { entries: LeaderboardEntryResult[]
                   {displayUrl && (
                     <>
                       <span>&bull;</span>
-                      <span className="font-medium text-neutral-700">{displayUrl}</span>
+                      <a
+                        href={`/api/click/${entry._id}`}
+                        className="font-medium text-neutral-700 hover:text-accent-500"
+                      >
+                        {displayUrl}
+                      </a>
                     </>
                   )}
                   <span>&bull;</span>
@@ -93,9 +103,9 @@ export function LeaderboardList({ entries }: { entries: LeaderboardEntryResult[]
                   >
                     see details
                   </Link>
-                </p>
+                </div>
               </div>
-            </a>
+            </div>
 
             <div className="flex shrink-0 flex-col items-end gap-1 pl-2">
               <span className="text-h2 font-extrabold tabular-nums text-accent-500">

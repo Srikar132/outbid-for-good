@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Compass } from "lucide-react";
 import { CategoryResult } from "@/sanity/lib/data";
 import { categoryIcons } from "@/lib/category-icons";
 import { Scope, categoryTabHref } from "@/lib/scope";

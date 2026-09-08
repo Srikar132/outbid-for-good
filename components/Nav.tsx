@@ -15,38 +15,46 @@ export function Nav({
   const pathname = usePathname();
   const isLeaderboardRoute =
     pathname === "/" || pathname === "/today" || pathname.startsWith("/category/");
+  const analyticsUrl = process.env.NEXT_PUBLIC_POSTHOG_DASHBOARD_URL;
 
   return (
-    <header className="sticky top-0 z-10 border-b border-neutral-200/50 bg-cream/90 backdrop-blur">
-      <nav className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2">
-            <Crown size={22} className="text-accent-500" fill="currentColor" />
-            <span className="text-h3 font-extrabold tracking-tight text-neutral-900">outbid.lol</span>
-          </Link>
-          {stats && (
-            <span className="text-small hidden items-center gap-1.5 rounded-full border border-neutral-200/80 bg-surface px-3 py-1 text-neutral-700 shadow-2xs sm:inline-flex">
-              <span className="h-2 w-2 rounded-full bg-success" />
-              <span className="font-semibold text-neutral-900">{stats.donorCount} online</span>
-              <span className="text-neutral-400 font-normal">&middot;</span>
-              <span>₹{stats.totalRaised.toLocaleString("en-IN")} raised</span>
-              <span className="text-neutral-400 font-normal">&middot;</span>
-              <span className="font-medium text-neutral-500">stats &rarr;</span>
+    <header className="sticky top-0 z-10 border-b border-neutral-200 bg-cream/90 backdrop-blur">
+      <nav className="mx-auto flex w-full max-w-5xl flex-nowrap items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-8">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          <Crown size={20} className="text-accent-500" fill="currentColor" />
+          <span className="text-h3 text-neutral-900">OUTBID</span>
+        </Link>
+        {stats &&
+          (analyticsUrl ? (
+            <Link
+              href={analyticsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-small hidden shrink-0 items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-neutral-500 shadow-sm transition-colors sm:inline-flex hover:bg-neutral-100 dark:ring-1 dark:ring-white/5"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-success" />₹
+              {stats.totalRaised.toLocaleString("en-IN")} raised &middot;{" "}
+              {stats.donorCount} donors
+            </Link>
+          ) : (
+            <span className="text-small hidden shrink-0 items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-neutral-500 shadow-sm sm:inline-flex dark:ring-1 dark:ring-white/5">
+              <span className="h-1.5 w-1.5 rounded-full bg-success" />₹
+              {stats.totalRaised.toLocaleString("en-IN")} raised &middot;{" "}
+              {stats.donorCount} donors
             </span>
-          )}
-        </div>
-        <div className="flex items-center gap-3 sm:gap-5">
-          <Link href="/" className="text-body font-medium text-neutral-700 hover:text-neutral-900">
-            Daily
-          </Link>
-          <Link href="#cause" className="text-body font-medium text-neutral-700 hover:text-neutral-900">
-            Categories
-          </Link>
-          <Link href="#cause" className="text-body font-medium text-neutral-700 hover:text-neutral-900">
+          ))}
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
+          <Link
+            href="/about"
+            className="text-body flex h-9 items-center whitespace-nowrap rounded-full px-2 text-neutral-700 transition-colors hover:bg-neutral-100 sm:px-3"
+          >
             About
           </Link>
-          <Link href="/rules" className="text-body font-medium text-neutral-700 hover:text-neutral-900">
-            Rules
+          <Link
+            href="#cause"
+            className="text-body hidden h-9 items-center whitespace-nowrap rounded-full px-3 text-neutral-700 transition-colors hover:bg-neutral-100 sm:flex"
+          >
+            Our Cause
           </Link>
           <Suspense fallback={<div className="h-9 w-9" />}>
             {isLeaderboardRoute && <SearchBox />}

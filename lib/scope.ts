@@ -32,6 +32,16 @@ export function categoryTabHref(slug: string, current: Scope, q?: string) {
   return withQuery(`/category/${slug}`, { today: current.today ? "true" : undefined, q });
 }
 
+export function parseScope(params: {
+  category?: string;
+  today?: string;
+}): Scope {
+  return {
+    categorySlug: params.category || undefined,
+    today: params.today === "true",
+  };
+}
+
 export function viewToggleHref(mode: "all-time" | "today", current: Scope, q?: string) {
   if (mode === "today") {
     return withQuery(current.categorySlug ? `/category/${current.categorySlug}` : "/today", {
