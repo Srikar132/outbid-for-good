@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Minus, Plus, AtSign } from "lucide-react";
+import { Globe, Minus, Plus, AtSign } from "lucide-react";
 import Link from "next/link";
 import posthog from "posthog-js";
 import { CategoryResult } from "@/sanity/lib/data";

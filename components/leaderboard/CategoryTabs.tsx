@@ -17,35 +17,25 @@ export function CategoryTabs({
   const tabs = [{ slug: "all", title: "All" }, ...categories];
 
   return (
-    <div className="relative -mx-4 sm:mx-0">
-      <div className="flex gap-2 overflow-x-auto px-4 pb-1 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
-        {tabs.map((tab) => {
-          const isActive = tab.slug === active;
-          const Icon = categoryIcons[tab.slug];
-          return (
-            <Link
-              key={tab.slug}
-              href={categoryTabHref(tab.slug, scope, q)}
-              className={`text-body flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 font-semibold transition-colors ${
-                isActive
-                  ? "bg-accent-500 text-white"
-                  : "bg-surface text-neutral-700 hover:bg-accent-50 dark:ring-1 dark:ring-white/5"
-              }`}
-            >
-              {Icon && <Icon size={14} />}
-              {tab.title}
-            </Link>
-          );
-        })}
-        <Link
-          href="/categories"
-          className="text-body flex shrink-0 items-center gap-1.5 rounded-full bg-surface px-4 py-2 font-semibold text-neutral-700 transition-colors hover:bg-accent-50 dark:ring-1 dark:ring-white/5"
-        >
-          <Compass size={14} />
-          Explore
-        </Link>
-      </div>
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-cream to-transparent sm:hidden" />
+    <div className="flex max-w-full overflow-x-auto rounded-full bg-pill-bg p-1.5 scrollbar-none">
+      {tabs.map((tab) => {
+        const isActive = tab.slug === active;
+        const Icon = categoryIcons[tab.slug];
+        return (
+          <Link
+            key={tab.slug}
+            href={categoryTabHref(tab.slug, scope, q)}
+            className={`text-body shrink-0 flex items-center gap-1.5 rounded-full px-4 py-1.5 font-semibold transition-colors ${
+              isActive
+                ? "bg-accent-500 text-white shadow-sm"
+                : "text-neutral-700 hover:text-accent-500"
+            }`}
+          >
+            {Icon && <Icon size={14} />}
+            {tab.title}
+          </Link>
+        );
+      })}
     </div>
   );
 }

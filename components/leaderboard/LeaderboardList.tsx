@@ -9,10 +9,16 @@ const logoTint: Record<string, string> = {
   brand: "bg-accent-100 text-accent-500",
 };
 
+const getRankBg = (index: number) => {
+  if (index === 0) return "bg-[#F7EBE3] dark:bg-[#28211C]";
+  if (index === 1) return "bg-[#F9F0EA] dark:bg-[#231E1B]";
+  return "bg-[#FAF5F0] dark:bg-[#1E1B19]";
+};
+
 export function LeaderboardList({ entries }: { entries: LeaderboardEntryResult[] }) {
   if (entries.length === 0) {
     return (
-      <div className="rounded-lg bg-surface p-8 text-center shadow-sm">
+      <div className="rounded-2xl bg-surface p-8 text-center shadow-sm">
         <p className="text-body text-neutral-500">
           No confirmed donations in this view yet.
         </p>
@@ -21,58 +27,90 @@ export function LeaderboardList({ entries }: { entries: LeaderboardEntryResult[]
   }
 
   return (
-    <ol className="flex flex-col gap-2">
+    <ol className="flex flex-col gap-3">
       {entries.map((entry, index) => {
         const CategoryIcon = categoryIcons[entry.category.slug];
-        const isTop = index === 0;
         const name = entry.companyName ?? entry.displayName;
+        const displayUrl = entry.url
+          ? entry.url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")
+          : null;
+
         return (
           <li
             key={entry._id}
-            className={`flex items-center gap-2 rounded-lg border bg-surface p-3 transition-colors dark:ring-1 dark:ring-white/5 ${
-              isTop ? "border-accent-500" : "border-neutral-200 hover:border-accent-300"
-            }`}
+            className={`group relative flex items-center gap-3.5 rounded-3xl p-4 sm:p-5 transition-all hover:shadow-xs ${getRankBg(
+              index
+            )}`}
           >
-            <a
-              href={`/api/click/${entry._id}`}
-              className="flex min-w-0 flex-1 items-start gap-4 p-1"
-            >
-              <span
-                className={`text-h3 w-8 shrink-0 pt-1 tabular-nums ${
-                  isTop ? "text-accent-500" : "text-neutral-300"
-                }`}
-              >
-                #{index + 1}
-              </span>
-              <div
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${logoTint[entry.category.slug] ?? "bg-neutral-100 text-neutral-500"}`}
-              >
-                {CategoryIcon && <CategoryIcon size={20} />}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-body-lg truncate text-neutral-900">{name}</p>
-                {entry.tagline && (
-                  <p className="text-body mt-0.5 truncate text-neutral-500">{entry.tagline}</p>
-                )}
-                <p className="text-small mt-1 flex items-center gap-1.5 text-neutral-500">
-                  {CategoryIcon && <CategoryIcon size={12} />}
-                  <span>{entry.category.title}</span>
-                  <span className="text-neutral-300">&bull;</span>
-                  <span>{timeAgo(entry.confirmedAt)}</span>
-                </p>
-              </div>
-            </a>
+            <span className="text-h3 w-8 shrink-0 text-center font-extrabold tabular-nums text-accent-500">
+              #{index + 1}
+            </span>
 
-            <div className="flex shrink-0 flex-col items-end gap-1 pl-1">
-              <span className="text-h3 tabular-nums text-accent-500">
+            <div className="flex min-w-0 flex-1 items-center gap-4">
+              <a
+                href={`/api/click/${entry._id}`}
+                className="flex shrink-0 items-center justify-center"
+              >
+                <div
+                  className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-2xs ${
+                    logoTint[entry.category.slug] ?? "bg-neutral-900 text-white"
+                  }`}
+                >
+                  {CategoryIcon ? (
+                    <CategoryIcon size={24} />
+                  ) : (
+                    <span className="text-h3 font-bold">{name.charAt(0)}</span>
+                  )}
+                </div>
+              </a>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <a
+                    href={`/api/click/${entry._id}`}
+                    className="text-body-lg font-bold text-neutral-900 transition-colors hover:text-accent-500 group-hover:text-accent-500"
+                  >
+                    {name}
+                  </a>
+                </div>
+                {entry.tagline && (
+                  <p className="text-body mt-0.5 line-clamp-1 text-neutral-700">{entry.tagline}</p>
+                )}
+                <div className="text-small mt-1.5 flex flex-wrap items-center gap-2 text-neutral-500">
+                  {CategoryIcon && <CategoryIcon size={12} className="text-neutral-500" />}
+                  <span>{entry.category.title}</span>
+                  <span>&bull;</span>
+                  <span>{timeAgo(entry.confirmedAt)}</span>
+                  {displayUrl && (
+                    <>
+                      <span>&bull;</span>
+                      <a
+                        href={`/api/click/${entry._id}`}
+                        className="font-medium text-neutral-700 hover:text-accent-500"
+                      >
+                        {displayUrl}
+                      </a>
+                    </>
+                  )}
+                  <span>&bull;</span>
+                  <span className="font-medium text-neutral-700">
+                    {entry.clickCount?.toLocaleString() ?? 0} clicks
+                  </span>
+                  <span>&bull;</span>
+                  <Link
+                    href={`/entry/${entry.slug}`}
+                    className="font-medium text-neutral-500 underline hover:text-accent-500"
+                  >
+                    see details
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 flex-col items-end gap-1 pl-2">
+              <span className="text-h2 font-extrabold tabular-nums text-accent-500">
                 {formatAmount(entry.amount)}
               </span>
-              <Link
-                href={`/entry/${entry.slug}`}
-                className="text-small font-semibold text-primary-500 hover:text-primary-400"
-              >
-                see details
-              </Link>
             </div>
           </li>
         );

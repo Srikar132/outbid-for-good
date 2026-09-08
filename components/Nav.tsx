@@ -60,12 +60,6 @@ export function Nav({
             {isLeaderboardRoute && <SearchBox />}
           </Suspense>
           <ThemeToggle />
-          {/* <Link
-            href="/donate"
-            className="inline-flex h-10 items-center justify-center rounded-md bg-accent-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-400"
-          >
-            Outbid Now
-          </Link> */}
         </div>
       </nav>
     </header>
