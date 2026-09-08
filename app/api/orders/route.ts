@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
+import { getPostHogClient } from "@/lib/posthog-server";
 import {
   getActiveCycle,
   getCategories,
@@ -219,6 +220,26 @@ export async function POST(req: NextRequest) {
     });
 
     await writeClient.patch(entry._id).set({ razorpayOrderId: order.id }).commit();
+
+    const posthog = getPostHogClient();
+    if (posthog) {
+      posthog.capture({
+        distinctId: entry._id,
+        event: "order_created",
+        properties: {
+          amount,
+          entry_category: entryCategorySlug,
+          scope_category: resolvedScopeCategorySlug ?? null,
+          scope_today: isToday,
+          has_logo: !!resolvedLogoAssetId,
+          has_tagline: !!trimmedTagline,
+          has_company: !!trimmedCompany,
+          razorpay_order_id: order.id,
+          entry_id: entry._id,
+        },
+      });
+      await posthog.flush();
+    }
 
     return NextResponse.json({
       orderId: order.id,
