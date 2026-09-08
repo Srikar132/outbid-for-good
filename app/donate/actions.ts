@@ -28,6 +28,7 @@ export type ClaimError =
   | { code: "NO_ACTIVE_CYCLE" }
   | { code: "CATEGORY_NOT_FOUND" }
   | { code: "OUTBID"; floor: number }
+  | { code: "DATA_UNAVAILABLE" }
   | { code: "ENTRY_CREATE_FAILED" }
   | { code: "ORDER_CREATE_FAILED" }
   | { code: "SERVER_MISCONFIGURED" };
@@ -65,8 +66,31 @@ export async function createClaim(
 ): Promise<ClaimState> {
   const ip = getClientIp(await headers());
 
+  const posthog = getPostHogClient();
+  // A failed attempt has no entry to key on, so group each attempt under a
+  // fresh id. Every early return runs through fail() so no branch is silent.
+  const attemptId = crypto.randomUUID();
+  async function fail(error: ClaimError): Promise<ClaimState> {
+    if (posthog) {
+      posthog.capture({
+        distinctId: attemptId,
+        event: "claim_failed",
+        properties: {
+          code: error.code,
+          amount,
+          entry_category: entryCategorySlug,
+          scope_category: scopeCategorySlug,
+          scope_today: today,
+          ...(error.code === "OUTBID" ? { floor: error.floor } : {}),
+        },
+      });
+      await posthog.flush();
+    }
+    return { status: "error", error };
+  }
+
   if (!checkRateLimit(`orders:${ip}`, ORDER_RATE_LIMIT)) {
-    return { status: "error", error: { code: "RATE_LIMITED" } };
+    return fail({ code: "RATE_LIMITED" });
   }
 
   const parsed = claimFieldsSchema.safeParse({
@@ -79,22 +103,27 @@ export async function createClaim(
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error)
       .fieldErrors as Partial<Record<ClaimField, string[]>>;
-    return { status: "error", error: { code: "VALIDATION", fieldErrors } };
+    return fail({ code: "VALIDATION", fieldErrors });
   }
 
   const { displayName, companyName, url, tagline } = parsed.data;
 
   if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount < 1) {
-    return { status: "error", error: { code: "VALIDATION", fieldErrors: {} } };
+    return fail({ code: "VALIDATION", fieldErrors: {} });
   }
 
   // siteConfig, the active cycle, and the category list are independent
   // reads — fetch them concurrently instead of one after another.
-  const [siteConfig, cycle, categories] = await Promise.all([
-    getSiteConfig(),
-    getActiveCycle(),
-    getCategories(),
-  ]);
+  let siteConfig, cycle, categories;
+  try {
+    [siteConfig, cycle, categories] = await Promise.all([
+      getSiteConfig(),
+      getActiveCycle(),
+      getCategories(),
+    ]);
+  } catch {
+    return fail({ code: "DATA_UNAVAILABLE" });
+  }
 
   const moderation = moderateNames({
     displayName,
@@ -102,11 +131,11 @@ export async function createClaim(
     creatorName: siteConfig?.creatorName,
   });
   if (!moderation.ok) {
-    return { status: "error", error: { code: "MODERATION_REJECTED", reason: moderation.reason } };
+    return fail({ code: "MODERATION_REJECTED", reason: moderation.reason });
   }
 
   if (!cycle) {
-    return { status: "error", error: { code: "NO_ACTIVE_CYCLE" } };
+    return fail({ code: "NO_ACTIVE_CYCLE" });
   }
 
   // The entry's own category tag is always required (the schema mandates a
@@ -116,13 +145,18 @@ export async function createClaim(
   // still only has to beat the global top).
   const entryCategory = categories.find((c) => c.slug === entryCategorySlug);
   if (!entryCategory) {
-    return { status: "error", error: { code: "CATEGORY_NOT_FOUND" } };
+    return fail({ code: "CATEGORY_NOT_FOUND" });
   }
   if (scopeCategorySlug && !categories.some((c) => c.slug === scopeCategorySlug)) {
-    return { status: "error", error: { code: "CATEGORY_NOT_FOUND" } };
+    return fail({ code: "CATEGORY_NOT_FOUND" });
   }
 
-  const entries = await getConfirmedEntries(cycle._id);
+  let entries;
+  try {
+    entries = await getConfirmedEntries(cycle._id);
+  } catch {
+    return fail({ code: "DATA_UNAVAILABLE" });
+  }
   const filtered = filterEntries(entries, {
     categorySlug: scopeCategorySlug ?? undefined,
     today,
@@ -130,7 +164,7 @@ export async function createClaim(
   const floor = scopeTopAmount(filtered) + (siteConfig?.minimumIncrement ?? 0);
 
   if (amount < floor) {
-    return { status: "error", error: { code: "OUTBID", floor } };
+    return fail({ code: "OUTBID", floor });
   }
 
   if (
@@ -138,7 +172,7 @@ export async function createClaim(
     !process.env.RAZORPAY_KEY_ID ||
     !process.env.RAZORPAY_KEY_SECRET
   ) {
-    return { status: "error", error: { code: "SERVER_MISCONFIGURED" } };
+    return fail({ code: "SERVER_MISCONFIGURED" });
   }
 
   const slug = slugify(displayName);
@@ -160,7 +194,7 @@ export async function createClaim(
       cycle: { _type: "reference", _ref: cycle._id },
     });
   } catch {
-    return { status: "error", error: { code: "ENTRY_CREATE_FAILED" } };
+    return fail({ code: "ENTRY_CREATE_FAILED" });
   }
 
   const razorpay = new Razorpay({
@@ -178,7 +212,6 @@ export async function createClaim(
 
     await writeClient.patch(entry._id).set({ razorpayOrderId: order.id }).commit();
 
-    const posthog = getPostHogClient();
     if (posthog) {
       posthog.capture({
         distinctId: entry._id,
@@ -208,6 +241,6 @@ export async function createClaim(
       },
     };
   } catch {
-    return { status: "error", error: { code: "ORDER_CREATE_FAILED" } };
+    return fail({ code: "ORDER_CREATE_FAILED" });
   }
 }

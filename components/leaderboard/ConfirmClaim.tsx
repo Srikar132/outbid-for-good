@@ -43,6 +43,8 @@ function claimErrorMessage(error: ClaimError): string {
       return "That category no longer exists.";
     case "OUTBID":
       return `Someone else has claimed this. The current floor is ₹${error.floor.toLocaleString("en-IN")}.`;
+    case "DATA_UNAVAILABLE":
+      return "Couldn't load the leaderboard right now. Try again shortly.";
     case "ENTRY_CREATE_FAILED":
       return "Couldn't save your claim. Try again.";
     case "ORDER_CREATE_FAILED":
@@ -114,11 +116,32 @@ export function ConfirmClaim({
       ? state.error.fieldErrors
       : undefined;
 
+  // An empty required field (displayName, url) has an error from the first
+  // render — gate those on the user having typed so the form doesn't open
+  // pre-flagged. Optional fields (companyName, tagline) only ever error when
+  // filled, so they need no gate.
+  const nameError =
+    name.trim().length > 0 ? serverFieldErrors?.displayName ?? clientFieldErrors.displayName : undefined;
+  const companyError = serverFieldErrors?.companyName ?? clientFieldErrors.companyName;
   const urlError = url.trim().length > 0 ? serverFieldErrors?.url ?? clientFieldErrors.url : undefined;
   const taglineError = serverFieldErrors?.tagline ?? clientFieldErrors.tagline;
 
   const identity = parseIdentity(url.trim());
   const canSubmit = agreed && clientValidation.success && !pending;
+
+  // Say why the button is disabled instead of leaving a dead orange button.
+  const firstFieldError =
+    clientFieldErrors.displayName?.[0] ??
+    clientFieldErrors.url?.[0] ??
+    clientFieldErrors.companyName?.[0] ??
+    clientFieldErrors.tagline?.[0];
+  const disabledReason = pending
+    ? null
+    : !clientValidation.success
+    ? firstFieldError ?? "Check the highlighted fields."
+    : !agreed
+    ? "Agree to the Terms of Service to continue."
+    : null;
 
   const avatarSrc = identity ? faviconUrlFor(identity.url) : null;
   const previewSubtitle = [company.trim(), tagline.trim()].filter(Boolean).join(" · ");
@@ -285,6 +308,9 @@ export function ConfirmClaim({
             className={inputClass}
             placeholder="How you'll appear on the leaderboard"
           />
+          {nameError?.[0] && (
+            <span className="text-small mt-1 block font-normal text-error">{nameError[0]}</span>
+          )}
         </label>
 
         <label className={labelClass}>
@@ -296,6 +322,9 @@ export function ConfirmClaim({
             className={inputClass}
             placeholder="Company or brand name"
           />
+          {companyError?.[0] && (
+            <span className="text-small mt-1 block font-normal text-error">{companyError[0]}</span>
+          )}
         </label>
 
         <label className={labelClass}>
@@ -348,6 +377,10 @@ export function ConfirmClaim({
         )}
         {scriptError && (
           <p className="text-small text-error">Couldn&apos;t load checkout. Refresh and try again.</p>
+        )}
+
+        {disabledReason && (
+          <p className="text-small text-neutral-500">{disabledReason}</p>
         )}
 
         <Button variant="primary" className="mt-1 w-full" disabled={!canSubmit} type="submit">
