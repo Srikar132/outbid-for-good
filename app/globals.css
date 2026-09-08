@@ -3,43 +3,44 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Primary (Green) */
-  --color-primary-500: #15803d;
-  --color-primary-400: #16a34a;
-  --color-primary-300: #4ade80;
-  --color-primary-200: #86efac;
-  --color-primary-100: #dcfce7;
+  /* Primary (Cause / Green accent) */
+  --color-primary-500: #2e5b44;
+  --color-primary-400: #3d7257;
+  --color-primary-300: #649e80;
+  --color-primary-200: #a3cda8;
+  --color-primary-100: #e8f2ea;
 
-  /* Accent (Outbid orange) */
-  --color-accent-500: #ff5a1f;
-  --color-accent-400: #ff7a45;
-  --color-accent-300: #ffa37a;
-  --color-accent-200: #ffc7b0;
-  --color-accent-100: #ffe9df;
-  --color-accent-50: #fff4ee;
+  /* Accent (Claude Terracotta / Orange) */
+  --color-accent-500: #d97757;
+  --color-accent-400: #e28a6d;
+  --color-accent-300: #eb9e84;
+  --color-accent-200: #f5beac;
+  --color-accent-100: #faf0eb;
+  --color-accent-50: #fcf6f3;
 
-  /* Warm page background */
-  --color-cream: #fdf8f3;
+  /* Warm page background (Claude Light) */
+  --color-cream: #faf9f5;
 
-  /* Card/surface background — distinct from --color-white, which always
-     means literal white (e.g. text on a solid accent button). */
+  /* Card/surface background — distinct from --color-white */
   --color-surface: #ffffff;
+  --color-card-warm: #f8efeb;
+  --color-pill-bg: #f3ebe3;
 
-  /* Neutrals */
-  --color-neutral-900: #17211b;
-  --color-neutral-700: #374151;
-  --color-neutral-500: #667085;
-  --color-neutral-300: #98a2b3;
-  --color-neutral-200: #d0d5dd;
-  --color-neutral-100: #f1f5f2;
-  --color-neutral-50: #ffffff;
+  /* Neutrals (Claude Dark text, Mid Gray, Light Gray) */
+  --color-neutral-900: #141413;
+  --color-neutral-700: #42403a;
+  --color-neutral-500: #b0aea5;
+  --color-neutral-300: #c9c7be;
+  --color-neutral-200: #e8e6dc;
+  --color-neutral-100: #f4f3ee;
+  --color-neutral-50: #faf9f5;
   --color-white: #ffffff;
 
-  /* Semantic */
-  --color-success: #16a34a;
-  --color-error: #dc2626;
-  --color-warning: #f59e0b;
-  --color-info: #2563eb;
+  /* Semantic (Claude Blue for info/links) */
+  --color-success: #2e5b44;
+  --color-error: #c93b2b;
+  --color-warning: #d97706;
+  --color-info: #6a9bcc;
 
   --background: var(--color-neutral-50);
   --foreground: var(--color-neutral-900);
@@ -52,10 +53,10 @@
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12);
+  /* Shadows - subtle paper shadows */
+  --shadow-sm: 0 1px 2px rgba(20, 20, 19, 0.04);
+  --shadow-md: 0 4px 12px rgba(20, 20, 19, 0.06);
+  --shadow-lg: 0 12px 24px rgba(20, 20, 19, 0.09);
 }
 
 @theme inline {
@@ -76,6 +77,8 @@
   --color-accent-50: var(--color-accent-50);
   --color-cream: var(--color-cream);
   --color-surface: var(--color-surface);
+  --color-card-warm: var(--color-card-warm);
+  --color-pill-bg: var(--color-pill-bg);
 
   --color-neutral-900: var(--color-neutral-900);
   --color-neutral-700: var(--color-neutral-700);
@@ -162,18 +165,20 @@ body {
    --color-white is deliberately left alone: it means literal white (e.g.
    button label text on a solid accent button) regardless of theme. */
 .dark {
-  --color-cream: #18130f;
-  --color-surface: #241d18;
-  --color-neutral-900: #f5f0ea;
-  --color-neutral-700: #d8cec4;
-  --color-neutral-500: #a89e94;
-  --color-neutral-300: #6b6158;
-  --color-neutral-200: #3d332c;
-  --color-neutral-100: #302722;
-  --color-neutral-50: #18130f;
-  --color-accent-50: #2f1e14;
-  --color-accent-100: #4a2712;
-  --color-primary-100: #16301f;
+  --color-cream: #141413;
+  --color-surface: #1e1d1b;
+  --color-card-warm: #24211e;
+  --color-pill-bg: #201d1a;
+  --color-neutral-900: #faf9f5;
+  --color-neutral-700: #e8e6dc;
+  --color-neutral-500: #b0aea5;
+  --color-neutral-300: #57554e;
+  --color-neutral-200: #2d2b27;
+  --color-neutral-100: #242320;
+  --color-neutral-50: #141413;
+  --color-accent-50: #2a1b15;
+  --color-accent-100: #3d2319;
+  --color-primary-100: #16261c;
 }
 
 /* Focus is styled once, deliberately, instead of falling back to the

@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { Globe, Minus, Plus } from "lucide-react";
 import Link from "next/link";
 import { CategoryResult } from "@/sanity/lib/data";
-import { categoryIcons } from "@/lib/category-icons";
 import { Scope, scopeLabel } from "@/lib/scope";
 
 type RankPreview = { rank: number; total: number };
@@ -25,8 +24,7 @@ export function ClaimBand({
 
   const [amount, setAmount] = useState(claimAmount);
   const [name, setName] = useState("");
-  const [category, setCategory] = useState(categories[0]?.slug ?? "");
-  const [open, setOpen] = useState(false);
+  const category = scope.categorySlug ?? categories[0]?.slug ?? "";
   const [preview, setPreview] = useState<RankPreview | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -50,8 +48,6 @@ export function ClaimBand({
     return () => clearTimeout(timeout);
   }, [amount, scope.categorySlug, scope.today]);
 
-  const selected = categories.find((c) => c.slug === category);
-  const SelectedIcon = categoryIcons[category];
   const isTop = !loading && preview?.rank === 1;
 
   const claimHref = `/donate?amount=${amount}&category=${category}${
@@ -94,60 +90,23 @@ export function ClaimBand({
         )}
       </p>
 
-      <div className="relative flex w-full max-w-2xl items-center gap-1.5 rounded-full bg-surface p-1.5 shadow-md transition-shadow focus-within:ring-2 focus-within:ring-accent-300 dark:ring-1 dark:ring-white/5">
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-label={`Category: ${selected?.title ?? "choose one"}`}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 transition-colors hover:bg-neutral-200"
-        >
-          {SelectedIcon && <SelectedIcon size={16} />}
-        </button>
-
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Your name or brand"
-          className="text-body h-11 flex-1 bg-transparent px-1 text-neutral-900 outline-none"
-        />
+      <div className="flex w-full max-w-xl flex-col items-center gap-2.5 sm:flex-row">
+        <div className="relative flex h-12 flex-1 items-center gap-2.5 rounded-full border border-neutral-200 bg-surface px-4 shadow-xs transition-shadow focus-within:ring-2 focus-within:ring-accent-300">
+          <Globe size={18} className="shrink-0 text-neutral-400" />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your product URL or @handle"
+            className="text-body h-full w-full bg-transparent text-neutral-900 outline-none placeholder:text-neutral-400"
+          />
+        </div>
 
         <Link
           href={claimHref}
-          className="flex h-11 shrink-0 items-center justify-center rounded-full bg-accent-500 px-6 text-sm font-semibold text-white transition-colors hover:bg-accent-400"
+          className="flex h-12 shrink-0 items-center justify-center rounded-full bg-accent-500 px-7 text-body font-bold text-white shadow-xs transition-colors hover:bg-accent-400"
         >
           Claim rank
         </Link>
-
-        {open && (
-          <>
-            <button
-              type="button"
-              aria-hidden
-              onClick={() => setOpen(false)}
-              className="fixed inset-0 z-10 cursor-default"
-            />
-            <ul className="text-body absolute left-0 top-full z-20 mt-2 w-56 rounded-lg border border-neutral-200 bg-surface p-2 text-left shadow-lg">
-              {categories.map((c) => {
-                const Icon = categoryIcons[c.slug];
-                return (
-                  <li key={c.slug}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCategory(c.slug);
-                        setOpen(false);
-                      }}
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-neutral-700 hover:bg-accent-50"
-                    >
-                      {Icon && <Icon size={16} className="text-neutral-500" />}
-                      {c.title}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        )}
       </div>
     </section>
   );
