@@ -5,6 +5,7 @@ import { Clock, Lock, XCircle } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
+import posthog from "posthog-js";
 import { Scope } from "@/lib/scope";
 import { faviconUrlFor, isValidHttpUrl } from "@/lib/identity";
 
@@ -125,6 +126,11 @@ export function ConfirmClaim({
     }
     setLogoFile(file);
     setLogoPreview(URL.createObjectURL(file));
+    posthog.capture("logo_uploaded", {
+      file_type: file.type,
+      file_size_kb: Math.round(file.size / 1024),
+      category: categorySlug,
+    });
   };
 
   const handleSubmit = async () => {
@@ -175,6 +181,16 @@ export function ConfirmClaim({
 
       await loadCheckoutScript();
 
+      posthog.capture("checkout_started", {
+        amount,
+        category: categorySlug,
+        scope_category: scope.categorySlug ?? null,
+        scope_today: !!scope.today,
+        has_logo: !!logoAssetId,
+        has_tagline: !!(tagline.trim()),
+        has_company: !!(company.trim()),
+      });
+
       const razorpay = new window.Razorpay({
         key: data.keyId,
         order_id: data.orderId,
@@ -183,12 +199,35 @@ export function ConfirmClaim({
         name: "OutBid for Good",
         description: `Claim rank${label}`,
         prefill: { name: name.trim() },
-        handler: () => setStatus("submitted"),
-        modal: { ondismiss: () => setStatus("cancelled") },
+        handler: () => {
+          posthog.capture("checkout_payment_submitted", {
+            amount,
+            category: categorySlug,
+            scope_category: scope.categorySlug ?? null,
+            scope_today: !!scope.today,
+          });
+          setStatus("submitted");
+        },
+        modal: {
+          ondismiss: () => {
+            posthog.capture("checkout_cancelled", {
+              amount,
+              category: categorySlug,
+              scope_category: scope.categorySlug ?? null,
+            });
+            setStatus("cancelled");
+          },
+        },
       });
 
       razorpay.open();
-    } catch {
+    } catch (err) {
+      posthog.captureException(err);
+      posthog.capture("checkout_failed", {
+        amount,
+        category: categorySlug,
+        scope_category: scope.categorySlug ?? null,
+      });
       setError("Couldn't reach checkout. Try again.");
       setStatus("failed");
     }

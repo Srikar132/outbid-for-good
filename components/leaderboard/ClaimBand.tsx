@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Minus, Plus, AtSign } from "lucide-react";
 import Link from "next/link";
+import posthog from "posthog-js";
 import { CategoryResult } from "@/sanity/lib/data";
 import { categoryIcons } from "@/lib/category-icons";
 import { Scope, scopeLabel } from "@/lib/scope";
@@ -37,7 +38,14 @@ export function ClaimBand({
   const lookupRequestId = useRef(0);
 
   const step = (dir: 1 | -1) => {
-    setAmount((prev) => Math.max(minimumIncrement, prev + dir * minimumIncrement));
+    const next = Math.max(minimumIncrement, amount + dir * minimumIncrement);
+    setAmount(next);
+    posthog.capture("claim_amount_adjusted", {
+      direction: dir === 1 ? "increase" : "decrease",
+      new_amount: next,
+      scope_category: scope.categorySlug ?? null,
+      scope_today: !!scope.today,
+    });
   };
 
   const identity = parseIdentity(identityInput);
@@ -168,6 +176,16 @@ export function ClaimBand({
 
         <Link
           href={claimHref}
+          onClick={() =>
+            posthog.capture("claim_rank_clicked", {
+              amount,
+              category,
+              scope_category: scope.categorySlug ?? null,
+              scope_today: !!scope.today,
+              is_reclaim: reclaiming,
+              projected_rank: preview?.rank ?? null,
+            })
+          }
           className="flex h-11 shrink-0 items-center justify-center rounded-full bg-accent-500 px-6 text-sm font-semibold text-white transition-colors hover:bg-accent-400"
         >
           {reclaiming ? "Reclaim rank" : "Claim rank"}

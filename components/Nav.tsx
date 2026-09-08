@@ -15,6 +15,7 @@ export function Nav({
   const pathname = usePathname();
   const isLeaderboardRoute =
     pathname === "/" || pathname === "/today" || pathname.startsWith("/category/");
+  const analyticsUrl = process.env.NEXT_PUBLIC_POSTHOG_DASHBOARD_URL;
 
   return (
     <header className="sticky top-0 z-10 border-b border-neutral-200 bg-cream/90 backdrop-blur">
@@ -23,13 +24,25 @@ export function Nav({
           <Crown size={20} className="text-accent-500" fill="currentColor" />
           <span className="text-h3 text-neutral-900">OUTBID</span>
         </Link>
-        {stats && (
-          <span className="text-small hidden shrink-0 items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-neutral-500 shadow-sm sm:inline-flex dark:ring-1 dark:ring-white/5">
-            <span className="h-1.5 w-1.5 rounded-full bg-success" />₹
-            {stats.totalRaised.toLocaleString("en-IN")} raised &middot;{" "}
-            {stats.donorCount} donors
-          </span>
-        )}
+        {stats &&
+          (analyticsUrl ? (
+            <Link
+              href={analyticsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-small hidden shrink-0 items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-neutral-500 shadow-sm transition-colors sm:inline-flex hover:bg-neutral-100 dark:ring-1 dark:ring-white/5"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-success" />₹
+              {stats.totalRaised.toLocaleString("en-IN")} raised &middot;{" "}
+              {stats.donorCount} donors
+            </Link>
+          ) : (
+            <span className="text-small hidden shrink-0 items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-neutral-500 shadow-sm sm:inline-flex dark:ring-1 dark:ring-white/5">
+              <span className="h-1.5 w-1.5 rounded-full bg-success" />₹
+              {stats.totalRaised.toLocaleString("en-IN")} raised &middot;{" "}
+              {stats.donorCount} donors
+            </span>
+          ))}
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
           <Link
             href="/about"
