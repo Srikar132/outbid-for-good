@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import Script from "next/script";
 import { Clock, Lock, XCircle } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import posthog from "posthog-js";
 import { Scope } from "@/lib/scope";
-import { faviconUrlFor, isValidHttpUrl } from "@/lib/identity";
+import { faviconUrlFor, parseIdentity } from "@/lib/identity";
+import { z } from "zod";
+import { claimFieldsSchema, MAX_TAGLINE_LENGTH, MAX_LOGO_BYTES } from "@/lib/validation/claim";
+import { createClaim, ClaimError, ClaimState } from "@/app/donate/actions";
 
-type Status = "idle" | "submitting" | "submitted" | "cancelled" | "failed";
-
-const MAX_TAGLINE_LENGTH = 140;
-const MAX_LOGO_BYTES = 2 * 1024 * 1024;
+type PaymentPhase = "idle" | "submitted" | "cancelled" | "failed";
 
 declare global {
   interface Window {
@@ -22,29 +23,36 @@ declare global {
   }
 }
 
-let checkoutScriptPromise: Promise<void> | null = null;
-
-function loadCheckoutScript(): Promise<void> {
-  if (checkoutScriptPromise) return checkoutScriptPromise;
-
-  checkoutScriptPromise = new Promise((resolve, reject) => {
-    if (window.Razorpay) {
-      resolve();
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Razorpay checkout"));
-    document.body.appendChild(script);
-  });
-
-  return checkoutScriptPromise;
-}
-
 const inputClass =
   "text-body mt-1 block h-11 w-full rounded-md border border-neutral-200 bg-surface px-3 outline-none focus:border-primary-400";
 const labelClass = "text-small font-semibold text-neutral-700";
+
+const initialClaimState: ClaimState = { status: "idle" };
+
+function claimErrorMessage(error: ClaimError): string {
+  switch (error.code) {
+    case "VALIDATION":
+      return "Check the highlighted fields.";
+    case "RATE_LIMITED":
+      return "Too many attempts. Wait a minute and try again.";
+    case "MODERATION_REJECTED":
+      return error.reason;
+    case "NO_ACTIVE_CYCLE":
+      return "No active donation cycle right now.";
+    case "CATEGORY_NOT_FOUND":
+      return "That category no longer exists.";
+    case "OUTBID":
+      return `Someone else has claimed this. The current floor is ₹${error.floor.toLocaleString("en-IN")}.`;
+    case "UPLOAD_FAILED":
+      return "Couldn't upload logo. Try again.";
+    case "ENTRY_CREATE_FAILED":
+      return "Couldn't save your claim. Try again.";
+    case "ORDER_CREATE_FAILED":
+      return "Couldn't start checkout. Try again.";
+    case "SERVER_MISCONFIGURED":
+      return "Something's misconfigured on our end. Try again shortly.";
+  }
+}
 
 export function ConfirmClaim({
   scope,
@@ -61,6 +69,15 @@ export function ConfirmClaim({
   initialUrl: string;
   fundMessage?: string;
 }) {
+  const boundCreateClaim = createClaim.bind(
+    null,
+    amount,
+    categorySlug,
+    scope.categorySlug ?? null,
+    !!scope.today
+  );
+  const [state, formAction, pending] = useActionState(boundCreateClaim, initialClaimState);
+
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [url, setUrl] = useState(initialUrl);
@@ -69,8 +86,11 @@ export function ConfirmClaim({
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoError, setLogoError] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
-  const [status, setStatus] = useState<Status>("idle");
-  const [error, setError] = useState<string | null>(null);
+  const [paymentPhase, setPaymentPhase] = useState<PaymentPhase>("idle");
+  const [scriptReady, setScriptReady] = useState(false);
+  const [scriptError, setScriptError] = useState(false);
+
+  const openedOrderIdRef = useRef<string | null>(null);
 
   // The label describes the board being beaten (`scope`), not the entry's
   // own category tag — those can differ (e.g. claiming from "/" tagged as
@@ -83,14 +103,29 @@ export function ConfirmClaim({
     : scope.today
     ? " today"
     : "";
-  const canSubmit =
-    agreed &&
-    name.trim().length > 0 &&
-    isValidHttpUrl(url.trim()) &&
-    status !== "submitting";
 
-  const trimmedUrl = url.trim();
-  const avatarSrc = logoPreview ?? (isValidHttpUrl(trimmedUrl) ? faviconUrlFor(trimmedUrl) : null);
+  const clientValidation = claimFieldsSchema.safeParse({
+    displayName: name,
+    companyName: company,
+    url,
+    tagline,
+  });
+  const clientFieldErrors = clientValidation.success
+    ? {}
+    : z.flattenError(clientValidation.error).fieldErrors;
+
+  const serverFieldErrors =
+    state.status === "error" && state.error.code === "VALIDATION"
+      ? state.error.fieldErrors
+      : undefined;
+
+  const urlError = url.trim().length > 0 ? serverFieldErrors?.url ?? clientFieldErrors.url : undefined;
+  const taglineError = serverFieldErrors?.tagline ?? clientFieldErrors.tagline;
+
+  const identity = parseIdentity(url.trim());
+  const canSubmit = agreed && clientValidation.success && !logoError && !pending;
+
+  const avatarSrc = logoPreview ?? (identity ? faviconUrlFor(identity.url) : null);
   const previewSubtitle = [company.trim(), tagline.trim()].filter(Boolean).join(" · ");
 
   const logoPreviewRef = useRef(logoPreview);
@@ -133,107 +168,72 @@ export function ConfirmClaim({
     });
   };
 
-  const handleSubmit = async () => {
-    setError(null);
-    setStatus("submitting");
+  useEffect(() => {
+    if (state.status !== "success") return;
+    if (!scriptReady) return;
+    if (openedOrderIdRef.current === state.order.orderId) return;
+    if (typeof window === "undefined" || !window.Razorpay) return;
 
-    try {
-      let logoAssetId: string | undefined;
-      if (logoFile) {
-        const formData = new FormData();
-        formData.append("file", logoFile);
-        const uploadRes = await fetch("/api/upload-logo", {
-          method: "POST",
-          body: formData,
+    openedOrderIdRef.current = state.order.orderId;
+
+    posthog.capture("checkout_started", {
+      amount: state.order.amount,
+      category: categorySlug,
+      scope_category: scope.categorySlug ?? null,
+      scope_today: !!scope.today,
+      has_logo: !!logoFile,
+      has_tagline: !!tagline.trim(),
+      has_company: !!company.trim(),
+    });
+
+    const razorpay = new window.Razorpay({
+      key: state.order.keyId,
+      order_id: state.order.orderId,
+      amount: state.order.amount * 100,
+      currency: state.order.currency,
+      name: "OutBid for Good",
+      description: `Claim rank${label}`,
+      prefill: { name: name.trim() },
+      handler: () => {
+        posthog.capture("checkout_payment_submitted", {
+          amount: state.order.amount,
+          category: categorySlug,
+          scope_category: scope.categorySlug ?? null,
+          scope_today: !!scope.today,
         });
-        const uploadData = await uploadRes.json();
-        if (!uploadRes.ok) {
-          setError(uploadData.error ?? "Couldn't upload logo. Try again.");
-          setStatus("idle");
-          return;
-        }
-        logoAssetId = uploadData.assetId;
-      }
-
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount,
-          entryCategorySlug: categorySlug,
-          scopeCategorySlug: scope.categorySlug ?? null,
-          today: !!scope.today,
-          displayName: name.trim(),
-          companyName: company.trim() || undefined,
-          url: trimmedUrl,
-          tagline: tagline.trim() || undefined,
-          logoAssetId,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error ?? "Something went wrong. Try again.");
-        setStatus("idle");
-        return;
-      }
-
-      await loadCheckoutScript();
-
-      posthog.capture("checkout_started", {
-        amount,
-        category: categorySlug,
-        scope_category: scope.categorySlug ?? null,
-        scope_today: !!scope.today,
-        has_logo: !!logoAssetId,
-        has_tagline: !!(tagline.trim()),
-        has_company: !!(company.trim()),
-      });
-
-      const razorpay = new window.Razorpay({
-        key: data.keyId,
-        order_id: data.orderId,
-        amount: data.amount * 100,
-        currency: data.currency,
-        name: "OutBid for Good",
-        description: `Claim rank${label}`,
-        prefill: { name: name.trim() },
-        handler: () => {
-          posthog.capture("checkout_payment_submitted", {
-            amount,
+        setPaymentPhase("submitted");
+      },
+      modal: {
+        ondismiss: () => {
+          posthog.capture("checkout_cancelled", {
+            amount: state.order.amount,
             category: categorySlug,
             scope_category: scope.categorySlug ?? null,
-            scope_today: !!scope.today,
           });
-          setStatus("submitted");
+          setPaymentPhase("cancelled");
         },
-        modal: {
-          ondismiss: () => {
-            posthog.capture("checkout_cancelled", {
-              amount,
-              category: categorySlug,
-              scope_category: scope.categorySlug ?? null,
-            });
-            setStatus("cancelled");
-          },
-        },
-      });
+      },
+    });
 
-      razorpay.open();
-    } catch (err) {
-      posthog.captureException(err);
-      posthog.capture("checkout_failed", {
-        amount,
-        category: categorySlug,
-        scope_category: scope.categorySlug ?? null,
-      });
-      setError("Couldn't reach checkout. Try again.");
-      setStatus("failed");
-    }
-  };
+    // Deferred so a synchronous throw from razorpay.open() sets state from a
+    // callback, not directly in the effect body (react-hooks/set-state-in-effect).
+    queueMicrotask(() => {
+      try {
+        razorpay.open();
+      } catch (err) {
+        posthog.captureException(err);
+        posthog.capture("checkout_failed", {
+          amount: state.order.amount,
+          category: categorySlug,
+          scope_category: scope.categorySlug ?? null,
+        });
+        setPaymentPhase("failed");
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, scriptReady]);
 
-  if (status === "submitted" || status === "cancelled" || status === "failed") {
+  if (paymentPhase === "submitted" || paymentPhase === "cancelled" || paymentPhase === "failed") {
     const outcome = {
       submitted: {
         icon: <Clock size={20} className="text-warning" />,
@@ -253,7 +253,7 @@ export function ConfirmClaim({
         body: "Nothing was charged. Try again.",
         showRetry: true,
       },
-    }[status];
+    }[paymentPhase];
 
     return (
       <Card>
@@ -265,7 +265,14 @@ export function ConfirmClaim({
           </div>
         </div>
         {outcome.showRetry && (
-          <Button variant="secondary" className="mt-4 w-full" onClick={() => setStatus("idle")}>
+          <Button
+            variant="secondary"
+            className="mt-4 w-full"
+            onClick={() => {
+              openedOrderIdRef.current = null;
+              setPaymentPhase("idle");
+            }}
+          >
             Try again
           </Button>
         )}
@@ -275,6 +282,13 @@ export function ConfirmClaim({
 
   return (
     <Card>
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="afterInteractive"
+        onReady={() => setScriptReady(true)}
+        onError={() => setScriptError(true)}
+      />
+
       <div className="flex items-center justify-between">
         <Badge variant="current">#1{label}</Badge>
         <p className="text-small text-neutral-500">Due now</p>
@@ -307,10 +321,11 @@ export function ConfirmClaim({
         <span className="text-small shrink-0 font-semibold text-neutral-400">Preview</span>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3">
+      <form action={formAction} className="mt-4 flex flex-col gap-3">
         <label className={labelClass}>
           Display Name
           <input
+            name="displayName"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className={inputClass}
@@ -321,6 +336,7 @@ export function ConfirmClaim({
         <label className={labelClass}>
           Company (optional)
           <input
+            name="companyName"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
             className={inputClass}
@@ -331,21 +347,21 @@ export function ConfirmClaim({
         <label className={labelClass}>
           Website / handle URL
           <input
+            name="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             className={inputClass}
-            placeholder="https://your-link.com"
+            placeholder="URL or @handle"
           />
-          {url.trim().length > 0 && !isValidHttpUrl(url.trim()) && (
-            <span className="text-small mt-1 block font-normal text-error">
-              Enter a valid http(s) URL.
-            </span>
+          {urlError?.[0] && (
+            <span className="text-small mt-1 block font-normal text-error">{urlError[0]}</span>
           )}
         </label>
 
         <label className={labelClass}>
           Tagline (optional)
           <textarea
+            name="tagline"
             value={tagline}
             onChange={(e) => setTagline(e.target.value.slice(0, MAX_TAGLINE_LENGTH))}
             rows={2}
@@ -355,11 +371,15 @@ export function ConfirmClaim({
           <span className="text-small mt-1 block font-normal text-neutral-500">
             {MAX_TAGLINE_LENGTH - tagline.length} characters left
           </span>
+          {taglineError?.[0] && (
+            <span className="text-small mt-1 block font-normal text-error">{taglineError[0]}</span>
+          )}
         </label>
 
         <label className={labelClass}>
           Logo (optional)
           <input
+            name="logo"
             type="file"
             accept="image/*"
             onChange={(e) => handleLogoChange(e.target.files?.[0] ?? null)}
@@ -367,31 +387,31 @@ export function ConfirmClaim({
           />
           {logoError && <span className="text-small mt-1 block font-normal text-error">{logoError}</span>}
         </label>
-      </div>
 
-      <label className="text-small mt-4 flex items-start gap-2 rounded-md border border-neutral-200 bg-neutral-50 p-3 text-neutral-700">
-        <input
-          type="checkbox"
-          checked={agreed}
-          onChange={(e) => setAgreed(e.target.checked)}
-          className="mt-0.5"
-        />
-        I have read and agree to the{" "}
-        <a href="/terms" className="text-accent-500 underline">
-          Terms of Service
-        </a>
-      </label>
+        <label className="text-small mt-1 flex items-start gap-2 rounded-md border border-neutral-200 bg-neutral-50 p-3 text-neutral-700">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5"
+          />
+          I have read and agree to the{" "}
+          <a href="/terms" className="text-accent-500 underline">
+            Terms of Service
+          </a>
+        </label>
 
-      {error && <p className="text-small mt-2 text-error">{error}</p>}
+        {state.status === "error" && (
+          <p className="text-small text-error">{claimErrorMessage(state.error)}</p>
+        )}
+        {scriptError && (
+          <p className="text-small text-error">Couldn&apos;t load checkout. Refresh and try again.</p>
+        )}
 
-      <Button
-        variant="primary"
-        className="mt-4 w-full"
-        disabled={!canSubmit}
-        onClick={handleSubmit}
-      >
-        {status === "submitting" ? "Preparing checkout…" : "Continue to checkout"}
-      </Button>
+        <Button variant="primary" className="mt-1 w-full" disabled={!canSubmit} type="submit">
+          {pending ? "Preparing checkout…" : "Continue to checkout"}
+        </Button>
+      </form>
 
       <div className="mt-3 flex items-center justify-center gap-1.5 text-small text-neutral-400">
         <Lock size={12} />
