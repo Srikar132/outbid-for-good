@@ -104,14 +104,14 @@
   --shadow-md: var(--shadow-md);
   --shadow-lg: var(--shadow-lg);
 
-  --font-display: var(--font-sora);
-  --font-sans: var(--font-inter);
+  --font-display: var(--font-outfit);
+  --font-sans: var(--font-outfit);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  font-family: var(--font-outfit), Arial, Helvetica, sans-serif;
 }
 
 /* Type scale — display/h1/h2 use clamp() so hero-sized headings shrink
@@ -121,46 +121,57 @@ body {
    so it scales with the clamped font-size automatically. h3/body/small
    are already small enough to stay fixed at every breakpoint. */
 .text-display {
-  font-family: var(--font-sora);
+  font-family: var(--font-outfit);
   font-weight: 700;
-  font-size: clamp(2rem, 1.4rem + 2.5vw, 3rem);
+  font-size: clamp(2.125rem, 1.45rem + 2.7vw, 3.25rem);
   line-height: 1.15;
 }
 .text-h1 {
-  font-family: var(--font-sora);
+  font-family: var(--font-outfit);
   font-weight: 700;
   font-size: clamp(1.5rem, 1.2rem + 1.25vw, 2rem);
   line-height: 1.25;
 }
 .text-h2 {
-  font-family: var(--font-sora);
+  font-family: var(--font-outfit);
   font-weight: 600;
   font-size: clamp(1.25rem, 1.1rem + 0.65vw, 1.5rem);
   line-height: 1.3;
 }
 .text-h3 {
-  font-family: var(--font-sora);
+  font-family: var(--font-outfit);
   font-weight: 600;
   font-size: 20px;
   line-height: 28px;
 }
 .text-body-lg {
-  font-family: var(--font-inter);
+  font-family: var(--font-outfit);
   font-weight: 600;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 17px;
+  line-height: 26px;
 }
 .text-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-outfit);
   font-weight: 400;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 15px;
+  line-height: 22px;
 }
 .text-small {
-  font-family: var(--font-inter);
+  font-family: var(--font-outfit);
   font-weight: 400;
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+/* Horizontal scroll without a visible bar — the category tabs and the
+   "today" strip scroll on mobile and rely on a peeking next item, not a
+   scrollbar, to signal there is more. */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* Dark palette — overrides the underlying CSS custom properties (not the

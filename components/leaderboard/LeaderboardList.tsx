@@ -1,24 +1,33 @@
-import Link from "next/link";
-import { AtSign } from "lucide-react";
 import { LeaderboardEntryResult } from "@/sanity/lib/data";
-import { formatAmount, timeAgo } from "@/lib/format";
-import { categoryIcons } from "@/lib/category-icons";
-import { faviconUrlFor, isHandleStyleUrl } from "@/lib/identity";
+import { EntryHeroCard } from "./EntryHeroCard";
+import { EntryRow } from "./EntryRow";
+import { SectionDivider } from "./SectionDivider";
+import { TodayStrip } from "./TodayStrip";
 
-const logoTint: Record<string, string> = {
-  individual: "bg-primary-100 text-primary-500",
-  company: "bg-info/10 text-info",
-  brand: "bg-accent-100 text-accent-500",
-};
+const HERO_COUNT = 3;
+const MID_END = 10;
+const TOP_MARK = 20;
 
-const getRankBg = (index: number) => {
-  if (index === 0) return "bg-[#F7EBE3] dark:bg-[#28211C]";
-  if (index === 1) return "bg-[#F9F0EA] dark:bg-[#231E1B]";
-  return "bg-[#FAF5F0] dark:bg-[#1E1B19]";
-};
+const listClass = "flex flex-col divide-y divide-neutral-200 dark:divide-white/5";
 
-export function LeaderboardList({ entries }: { entries: LeaderboardEntryResult[] }) {
-  if (entries.length === 0) {
+export function LeaderboardList({
+  items,
+  startIndex,
+  showSections,
+  rankById,
+  todayEntries,
+}: {
+  items: LeaderboardEntryResult[];
+  /** Index of items[0] within the full filtered list — the paging offset. */
+  startIndex: number;
+  /** Page 1 of an unsearched board: podium, today strip, TOP 20 marker. */
+  showSections: boolean;
+  /** True board ranks, supplied while searching (see app/page.tsx). */
+  rankById?: Map<string, number>;
+  /** Last-24h entries for the strip. Only the home page passes this. */
+  todayEntries?: LeaderboardEntryResult[];
+}) {
+  if (items.length === 0) {
     return (
       <div className="rounded-2xl bg-surface p-8 text-center shadow-sm">
         <p className="text-body text-neutral-500">
@@ -28,79 +37,46 @@ export function LeaderboardList({ entries }: { entries: LeaderboardEntryResult[]
     );
   }
 
+  // One rank formula for every section. `i` is always an index into `items`,
+  // so no section does arithmetic of its own and none of them can disagree.
+  // While searching, position in the filtered array is not the donor's rank,
+  // so rankById supplies the real one.
+  const rankAt = (i: number) => rankById?.get(items[i]._id) ?? startIndex + i + 1;
+
+  const rows = (from: number, to: number) =>
+    items.slice(from, to).map((entry, i) => (
+      <EntryRow key={entry._id} entry={entry} rank={rankAt(from + i)} />
+    ));
+
+  if (!showSections) {
+    return <ol className={listClass}>{rows(0, items.length)}</ol>;
+  }
+
+  const heroes = items.slice(0, HERO_COUNT);
+  const mid = items.slice(HERO_COUNT, MID_END);
+  const upper = items.slice(MID_END, TOP_MARK);
+  const rest = items.slice(TOP_MARK);
+
   return (
-    <ol className="flex flex-col gap-3">
-      {entries.map((entry, index) => {
-        const CategoryIcon = categoryIcons[entry.category.slug];
-        const name = entry.companyName ?? entry.displayName;
+    <div className="flex flex-col gap-4">
+      <ol className="flex flex-col gap-3">
+        {heroes.map((entry, i) => (
+          <EntryHeroCard key={entry._id} entry={entry} rank={rankAt(i)} />
+        ))}
+      </ol>
 
-        return (
-          <li
-            key={entry._id}
-            className={`group relative flex items-start gap-2.5 rounded-2xl p-3 transition-all hover:shadow-xs sm:gap-3 sm:p-3.5 ${getRankBg(
-              index
-            )}`}
-          >
-            <span className="text-body-lg w-6 shrink-0 pt-0.5 text-center font-extrabold tabular-nums text-accent-500">
-              #{index + 1}
-            </span>
+      {todayEntries && <TodayStrip entries={todayEntries} />}
 
-            <a
-              href={`/api/click/${entry._id}`}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-2xs sm:h-11 sm:w-11"
-            >
-              <div
-                className={`flex h-full w-full items-center justify-center overflow-hidden rounded-xl ${
-                  logoTint[entry.category.slug] ?? "bg-neutral-900 text-white"
-                }`}
-              >
-                {entry.url && isHandleStyleUrl(entry.url) ? (
-                  <AtSign size={18} />
-                ) : entry.url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={faviconUrlFor(entry.url)} alt="" className="h-5 w-5" />
-                ) : CategoryIcon ? (
-                  <CategoryIcon size={18} />
-                ) : (
-                  <span className="text-small font-bold">{name.charAt(0)}</span>
-                )}
-              </div>
-            </a>
+      {mid.length > 0 && <ol className={listClass}>{rows(HERO_COUNT, MID_END)}</ol>}
 
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline justify-between gap-2">
-                <a
-                  href={`/api/click/${entry._id}`}
-                  className="text-body-lg truncate font-bold text-neutral-900 transition-colors hover:text-accent-500 group-hover:text-accent-500"
-                >
-                  {name}
-                </a>
-                <span className="text-body-lg shrink-0 font-extrabold tabular-nums text-accent-500">
-                  {formatAmount(entry.amount)}
-                </span>
-              </div>
-              {entry.tagline && (
-                <p className="text-small mt-0.5 line-clamp-1 text-neutral-700">{entry.tagline}</p>
-              )}
-              <div className="text-small mt-1 flex items-center gap-1.5 overflow-hidden text-neutral-500">
-                {CategoryIcon && <CategoryIcon size={11} className="shrink-0 text-neutral-500" />}
-                <span className="shrink-0 whitespace-nowrap">{entry.category.title}</span>
-                <span className="shrink-0">&bull;</span>
-                <span className="shrink-0 whitespace-nowrap">{timeAgo(entry.confirmedAt)}</span>
-                <span className="min-w-0 shrink truncate whitespace-nowrap">
-                  &bull; {entry.clickCount?.toLocaleString() ?? 0} clicks &bull;{" "}
-                  <Link
-                    href={`/entry/${entry.slug}`}
-                    className="font-medium text-neutral-500 underline hover:text-accent-500"
-                  >
-                    details
-                  </Link>
-                </span>
-              </div>
-            </div>
-          </li>
-        );
-      })}
-    </ol>
+      {upper.length > 0 && <ol className={listClass}>{rows(MID_END, TOP_MARK)}</ol>}
+
+      {rest.length > 0 && (
+        <>
+          <SectionDivider label="TOP 20" />
+          <ol className={listClass}>{rows(TOP_MARK, items.length)}</ol>
+        </>
+      )}
+    </div>
   );
 }
