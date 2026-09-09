@@ -32,6 +32,18 @@ export type SiteConfig = {
   causeBlurb: string;
   fundMessage: string;
   minimumIncrement: number;
+  heroImage?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  heroImageAlt?: string;
+  heroBadge?: string;
+  heroStatValue?: string;
+  heroStatCaption?: string;
+  heroChips?: Array<string>;
   creatorName?: string;
   creatorPhoto?: {
     asset?: SanityImageAssetReference;
@@ -269,7 +281,7 @@ export type ACTIVE_CYCLE_QUERY_RESULT = {
 
 // Source: ../sanity/lib/queries.ts
 // Variable: SITE_CONFIG_QUERY
-// Query: *[_id == "siteConfig"][0] {    _id,    causeTitle,    causeBlurb,    fundMessage,    minimumIncrement,    creatorName,    "creatorPhotoUrl": creatorPhoto.asset->url,    creatorBlurb  }
+// Query: *[_id == "siteConfig"][0] {    _id,    causeTitle,    causeBlurb,    fundMessage,    minimumIncrement,    "heroImageUrl": heroImage.asset->url,    heroImageAlt,    heroBadge,    heroStatValue,    heroStatCaption,    heroChips,    creatorName,    "creatorPhotoUrl": creatorPhoto.asset->url,    creatorBlurb  }
 export type SITE_CONFIG_QUERY_RESULT =
   | {
       _id: "siteConfig";
@@ -277,6 +289,12 @@ export type SITE_CONFIG_QUERY_RESULT =
       causeBlurb: null;
       fundMessage: null;
       minimumIncrement: null;
+      heroImageUrl: null;
+      heroImageAlt: null;
+      heroBadge: null;
+      heroStatValue: null;
+      heroStatCaption: null;
+      heroChips: null;
       creatorName: null;
       creatorPhotoUrl: null;
       creatorBlurb: null;
@@ -287,6 +305,12 @@ export type SITE_CONFIG_QUERY_RESULT =
       causeBlurb: string;
       fundMessage: string;
       minimumIncrement: number;
+      heroImageUrl: string | null;
+      heroImageAlt: string | null;
+      heroBadge: string | null;
+      heroStatValue: string | null;
+      heroStatCaption: string | null;
+      heroChips: Array<string> | null;
       creatorName: string | null;
       creatorPhotoUrl: string | null;
       creatorBlurb: string | null;
@@ -368,7 +392,7 @@ declare module "@sanity/client" {
     '*[_type == "leaderboardEntry" && _id == $id][0].url': ENTRY_URL_QUERY_RESULT;
     '\n  *[_type == "category"] | order(title asc) {\n    _id,\n    title,\n    "slug": slug.current,\n    description\n  }\n': CATEGORIES_QUERY_RESULT;
     '\n  *[_type == "cycle" && isActive == true][0] {\n    _id,\n    title,\n    startDate,\n    endDate,\n    isActive\n  }\n': ACTIVE_CYCLE_QUERY_RESULT;
-    '\n  *[_id == "siteConfig"][0] {\n    _id,\n    causeTitle,\n    causeBlurb,\n    fundMessage,\n    minimumIncrement,\n    creatorName,\n    "creatorPhotoUrl": creatorPhoto.asset->url,\n    creatorBlurb\n  }\n': SITE_CONFIG_QUERY_RESULT;
+    '\n  *[_id == "siteConfig"][0] {\n    _id,\n    causeTitle,\n    causeBlurb,\n    fundMessage,\n    minimumIncrement,\n    "heroImageUrl": heroImage.asset->url,\n    heroImageAlt,\n    heroBadge,\n    heroStatValue,\n    heroStatCaption,\n    heroChips,\n    creatorName,\n    "creatorPhotoUrl": creatorPhoto.asset->url,\n    creatorBlurb\n  }\n': SITE_CONFIG_QUERY_RESULT;
     '\n  *[_type == "leaderboardEntry" && status == "confirmed" && cycle._ref == $cycleId]\n  | order(amount desc) {\n    _id,\n    "slug": slug.current,\n    displayName,\n    companyName,\n    tagline,\n    url,\n    amount,\n    clickCount,\n    "confirmedAt": coalesce(confirmedAt, _createdAt),\n    "category": category->{ _id, title, "slug": slug.current }\n  }\n': CONFIRMED_ENTRIES_QUERY_RESULT;
     '\n  *[_type == "leaderboardEntry" && status == "confirmed" && slug.current == $slug][0] {\n    _id,\n    "slug": slug.current,\n    displayName,\n    companyName,\n    tagline,\n    url,\n    amount,\n    clickCount,\n    raiseCount,\n    "confirmedAt": coalesce(confirmedAt, _createdAt),\n    "category": category->{ _id, title, "slug": slug.current },\n    "cycle": cycle->{ _id, title, startDate, endDate, isActive },\n    "categoryRank": 1 + count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&\n      amount > ^.amount\n    ]),\n    "categoryTotal": count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref\n    ]),\n    "overallRank": 1 + count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref && amount > ^.amount\n    ]),\n    "overallTotal": count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref\n    ]),\n    "siblings": *[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&\n      _id != ^._id\n    ] | order(amount desc) [0...4] {\n      _id,\n      "slug": slug.current,\n      displayName,\n      companyName,\n      amount,\n      "rank": 1 + count(*[\n        _type == "leaderboardEntry" && status == "confirmed" &&\n        cycle._ref == ^.cycle._ref && category._ref == ^.category._ref &&\n        amount > ^.amount\n      ])\n    }\n  }\n': ENTRY_DETAIL_QUERY_RESULT;
     '\n  {\n    "rank": 1 + count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == $cycleId &&\n      ($categorySlug == null || category->slug.current == $categorySlug) &&\n      ($since == null || confirmedAt >= $since) &&\n      amount > $amount\n    ]),\n    "total": 1 + count(*[\n      _type == "leaderboardEntry" && status == "confirmed" &&\n      cycle._ref == $cycleId &&\n      ($categorySlug == null || category->slug.current == $categorySlug) &&\n      ($since == null || confirmedAt >= $since)\n    ])\n  }\n': SCOPE_RANK_PREVIEW_QUERY_RESULT;

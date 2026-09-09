@@ -1,8 +1,11 @@
+import { CauseHero } from "@/components/leaderboard/CauseHero";
 import { ClaimBand } from "@/components/leaderboard/ClaimBand";
 import { LeaderboardSection } from "@/components/leaderboard/LeaderboardSection";
 import { CauseCard } from "@/components/ui/Card";
 import { getLeaderboardData } from "@/sanity/lib/data";
 import { filterEntries, scopeTopAmount } from "@/lib/filters";
+import { mockEntries, isMockLeaderboardEnabled } from "@/lib/mock-entries";
+import { parsePageParam } from "@/lib/pagination";
 import { Scope } from "@/lib/scope";
 
 const FALLBACK_CAUSE_TITLE = "This cause is being set up";
@@ -13,15 +16,31 @@ const FALLBACK_MIN_INCREMENT = 0;
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const { q } = await searchParams;
-  const { siteConfig, categories, entries } = await getLeaderboardData();
+  const { q, page } = await searchParams;
+  const { siteConfig, categories, entries: liveEntries } = await getLeaderboardData();
+
+  // Dev-only fixture swap — see lib/mock-entries.ts. Never active in a
+  // production build, and never written back to Sanity.
+  const entries = isMockLeaderboardEnabled() ? mockEntries(categories) : liveEntries;
 
   const scope: Scope = {};
   const minimumIncrement = siteConfig?.minimumIncrement ?? FALLBACK_MIN_INCREMENT;
-  const topAmount = scopeTopAmount(filterEntries(entries, scope));
-  const filtered = filterEntries(entries, { ...scope, q });
+
+  // The scope-filtered list is the board itself — it fixes both the claim
+  // floor and every donor's true rank. Searching narrows what is displayed,
+  // never what a donor's rank is, so rankById is taken from `scoped` and the
+  // search filter is applied on top.
+  const scoped = filterEntries(entries, scope);
+  const topAmount = scopeTopAmount(scoped);
+  const filtered = q ? filterEntries(scoped, { q }) : scoped;
+  const rankById = q
+    ? new Map(scoped.map((entry, index) => [entry._id, index + 1]))
+    : undefined;
+
+  // Last 24h, ranked by amount — an independent list from the podium above it.
+  const todayEntries = filterEntries(entries, { today: true });
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 sm:px-8">
@@ -33,7 +52,17 @@ export default async function Home({
         categories={categories}
       />
 
-      <LeaderboardSection entries={filtered} categories={categories} scope={scope} q={q} />
+      <CauseHero siteConfig={siteConfig} />
+
+      <LeaderboardSection
+        entries={filtered}
+        categories={categories}
+        scope={scope}
+        q={q}
+        page={parsePageParam(page)}
+        rankById={rankById}
+        todayEntries={todayEntries}
+      />
 
       <section id="cause" className="scroll-mt-20 pt-6">
         <CauseCard
