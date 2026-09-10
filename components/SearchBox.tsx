@@ -19,7 +19,11 @@ export function SearchBox() {
     } else {
       params.delete("q");
     }
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    // A new search is a new result set, so any page position is meaningless —
+    // without this a search from page 4 lands on page 4 of three results.
+    params.delete("page");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
 
   if (!open) {

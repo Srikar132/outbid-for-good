@@ -5,9 +5,9 @@ import { LeaderboardList } from "@/components/leaderboard/LeaderboardList";
 import { CauseCard } from "@/components/ui/Card";
 import { getLeaderboardData } from "@/sanity/lib/data";
 import { filterEntries, scopeTopAmount } from "@/lib/filters";
+import { mockEntries, isMockLeaderboardEnabled } from "@/lib/mock-entries";
+import { parsePageParam } from "@/lib/pagination";
 import { Scope, viewToggleHref } from "@/lib/scope";
-
-const TODAY_TOP_COUNT = 3;
 
 const FALLBACK_CAUSE_TITLE = "This cause is being set up";
 const FALLBACK_CAUSE_BLURB =
@@ -19,11 +19,14 @@ export default async function CategoryPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ q?: string; today?: string }>;
+  searchParams: Promise<{ q?: string; today?: string; page?: string }>;
 }) {
   const { slug } = await params;
-  const { q, today } = await searchParams;
-  const { siteConfig, categories, entries } = await getLeaderboardData();
+  const { q, today, page } = await searchParams;
+  const { siteConfig, categories, entries: liveEntries } = await getLeaderboardData();
+
+  // Dev-only fixture swap — see lib/mock-entries.ts.
+  const entries = isMockLeaderboardEnabled() ? mockEntries(categories) : liveEntries;
 
   if (!categories.some((c) => c.slug === slug)) {
     notFound();
@@ -31,11 +34,20 @@ export default async function CategoryPage({
 
   const scope: Scope = { categorySlug: slug, today: today === "true" };
   const minimumIncrement = siteConfig?.minimumIncrement ?? FALLBACK_MIN_INCREMENT;
-  const topAmount = scopeTopAmount(filterEntries(entries, scope));
-  const filtered = filterEntries(entries, { ...scope, q });
-  const todayTop = scope.today
-    ? []
-    : filterEntries(entries, { ...scope, today: true, q }).slice(0, TODAY_TOP_COUNT);
+
+  // See app/page.tsx — ranks come from the scope-filtered board, not from the
+  // search results, so a searched donor keeps the rank they actually hold.
+  const scoped = filterEntries(entries, scope);
+  const topAmount = scopeTopAmount(scoped);
+  const filtered = q ? filterEntries(scoped, { q }) : scoped;
+  const rankById = q
+    ? new Map(scoped.map((entry, index) => [entry._id, index + 1]))
+    : undefined;
+
+  // Already viewing today for this category — the strip would repeat the list.
+  const todayEntries = scope.today
+    ? undefined
+    : filterEntries(entries, { ...scope, today: true });
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 sm:px-8">
@@ -52,7 +64,11 @@ export default async function CategoryPage({
 
       <LeaderboardList
         entries={filtered}
-        todayTop={todayTop}
+        page={parsePageParam(page)}
+        scope={scope}
+        q={q}
+        rankById={rankById}
+        todayEntries={todayEntries}
         todayHref={viewToggleHref("today", scope, q)}
       />
 

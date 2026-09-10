@@ -1,30 +1,47 @@
-import Link from "next/link";
-import { AtSign } from "lucide-react";
 import { LeaderboardEntryResult } from "@/sanity/lib/data";
-import { formatAmount, timeAgo } from "@/lib/format";
-import { categoryIcons } from "@/lib/category-icons";
-import { faviconUrlFor, isHandleStyleUrl } from "@/lib/identity";
-import { TodayTopRanking } from "./TodayTopRanking";
+import { Scope } from "@/lib/scope";
+import { paginate } from "@/lib/pagination";
+import { EntryHeroCard } from "./EntryHeroCard";
+import { EntryRow } from "./EntryRow";
+import { Pagination } from "./Pagination";
+import { SectionDivider } from "./SectionDivider";
+import { TodayStrip } from "./TodayStrip";
 
-const logoTint: Record<string, string> = {
-  individual: "bg-primary-100 text-primary-500",
-  company: "bg-info/10 text-info",
-  brand: "bg-accent-100 text-accent-500",
-};
+const HERO_COUNT = 3;
+const MID_END = 10;
+const TOP_MARK = 20;
 
-const getRankBg = (index: number) => {
-  if (index === 0) return "bg-[#DCEAFB] dark:bg-[#17233A]";
-  if (index === 1) return "bg-[#E5F0FC] dark:bg-[#141F33]";
-  return "bg-[#EDF4FD] dark:bg-[#11192B]";
-};
+const listClass = "flex flex-col divide-y divide-neutral-200 dark:divide-white/5";
 
+/**
+ * Owns paging and sectioning so the pages stay a flat compose of
+ * CategoryTabs + ClaimBand + LeaderboardList — there is deliberately no
+ * wrapper component between them.
+ */
 export function LeaderboardList({
   entries,
-  todayTop,
+  page,
+  scope,
+  q,
+  rankById,
+  todayEntries,
   todayHref,
 }: {
+  /** The full scope-filtered list. Paging is applied here, not by the caller. */
   entries: LeaderboardEntryResult[];
-  todayTop?: LeaderboardEntryResult[];
+  /**
+   * Omit for a plain flat list — no paging, no sections, no pagination
+   * control. That is the mode DailyBoard uses, where each day is already a
+   * small self-contained board.
+   */
+  page?: number;
+  scope?: Scope;
+  q?: string;
+  /** True board ranks, supplied while searching (see app/page.tsx). */
+  rankById?: Map<string, number>;
+  /** Last-24h entries for the strip after rank #3. */
+  todayEntries?: LeaderboardEntryResult[];
+  /** Scoped "see all" target for that strip. */
   todayHref?: string;
 }) {
   if (entries.length === 0) {
@@ -37,87 +54,72 @@ export function LeaderboardList({
     );
   }
 
-  const teaser =
-    todayTop && todayTop.length > 0 && todayHref ? (
-      <TodayTopRanking key="today-top-ranking" entries={todayTop} href={todayHref} />
-    ) : null;
-  const teaserAfterIndex = Math.min(2, entries.length - 1);
+  const paged = page !== undefined;
+  const pageData = paginate(entries, page ?? 1);
+  const items = paged ? pageData.items : entries;
+  const startIndex = paged ? pageData.startIndex : 0;
+
+  // Search results are a filtered subset, so their first three are not the
+  // board's top three — promoting them to podium cards would misrepresent
+  // them. Flat rows with true ranks is the honest rendering.
+  const showSections = paged && pageData.page === 1 && !q?.trim();
+
+  // One rank formula for every section. `i` is always an index into `items`,
+  // so no section does arithmetic of its own and none of them can disagree.
+  const rankAt = (i: number) => rankById?.get(items[i]._id) ?? startIndex + i + 1;
+
+  const rows = (from: number, to: number) =>
+    items.slice(from, to).map((entry, i) => (
+      <EntryRow key={entry._id} entry={entry} rank={rankAt(from + i)} />
+    ));
+
+  const pagination = paged ? (
+    <Pagination
+      page={pageData.page}
+      totalPages={pageData.totalPages}
+      total={pageData.total}
+      rangeStart={pageData.rangeStart}
+      rangeEnd={pageData.rangeEnd}
+      scope={scope ?? {}}
+      q={q}
+    />
+  ) : null;
+
+  if (!showSections) {
+    return (
+      <div className="flex flex-col gap-4">
+        <ol className={listClass}>{rows(0, items.length)}</ol>
+        {pagination}
+      </div>
+    );
+  }
+
+  const mid = items.slice(HERO_COUNT, MID_END);
+  const upper = items.slice(MID_END, TOP_MARK);
+  const rest = items.slice(TOP_MARK);
 
   return (
-    <ol className="flex flex-col gap-3">
-      {entries.flatMap((entry, index) => {
-        const CategoryIcon = categoryIcons[entry.category.slug];
-        const name = entry.companyName ?? entry.displayName;
+    <div className="flex flex-col gap-4">
+      <ol className="flex flex-col gap-3">
+        {items.slice(0, HERO_COUNT).map((entry, i) => (
+          <EntryHeroCard key={entry._id} entry={entry} rank={rankAt(i)} />
+        ))}
+      </ol>
 
-        const row = (
-          <li
-            key={entry._id}
-            className={`group relative flex items-start gap-2.5 rounded-2xl border border-neutral-200 p-3 shadow-sm transition-shadow hover:shadow-md sm:gap-3 sm:p-3.5 dark:border-white/5 ${getRankBg(
-              index
-            )}`}
-          >
-            <span className="text-body-lg w-6 shrink-0 pt-0.5 text-center font-extrabold tabular-nums text-accent-500">
-              #{index + 1}
-            </span>
+      {todayEntries && <TodayStrip entries={todayEntries} href={todayHref} />}
 
-            <a
-              href={`/api/click/${entry._id}`}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-2xs sm:h-11 sm:w-11"
-            >
-              <div
-                className={`flex h-full w-full items-center justify-center overflow-hidden rounded-xl ${
-                  logoTint[entry.category.slug] ?? "bg-neutral-900 text-white"
-                }`}
-              >
-                {entry.url && isHandleStyleUrl(entry.url) ? (
-                  <AtSign size={18} />
-                ) : entry.url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={faviconUrlFor(entry.url)} alt="" className="h-5 w-5" />
-                ) : CategoryIcon ? (
-                  <CategoryIcon size={18} />
-                ) : (
-                  <span className="text-small font-bold">{name.charAt(0)}</span>
-                )}
-              </div>
-            </a>
+      {mid.length > 0 && <ol className={listClass}>{rows(HERO_COUNT, MID_END)}</ol>}
 
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline justify-between gap-2">
-                <a
-                  href={`/api/click/${entry._id}`}
-                  className="text-body-lg truncate font-bold text-neutral-900 transition-colors hover:text-accent-500 group-hover:text-accent-500"
-                >
-                  {name}
-                </a>
-                <span className="text-body-lg shrink-0 font-extrabold tabular-nums text-accent-500">
-                  {formatAmount(entry.amount)}
-                </span>
-              </div>
-              {entry.tagline && (
-                <p className="text-small mt-0.5 line-clamp-1 text-neutral-700">{entry.tagline}</p>
-              )}
-              <div className="text-small mt-1 flex items-center gap-1.5 overflow-hidden text-neutral-500">
-                {CategoryIcon && <CategoryIcon size={11} className="shrink-0 text-neutral-500" />}
-                <span className="shrink-0 whitespace-nowrap">{entry.category.title}</span>
-                <span className="shrink-0">&bull;</span>
-                <span className="shrink-0 whitespace-nowrap">{timeAgo(entry.confirmedAt)}</span>
-                <span className="min-w-0 shrink truncate whitespace-nowrap">
-                  &bull; {entry.clickCount?.toLocaleString() ?? 0} clicks &bull;{" "}
-                  <Link
-                    href={`/entry/${entry.slug}`}
-                    className="font-medium text-neutral-500 underline hover:text-accent-500"
-                  >
-                    details
-                  </Link>
-                </span>
-              </div>
-            </div>
-          </li>
-        );
+      {upper.length > 0 && <ol className={listClass}>{rows(MID_END, TOP_MARK)}</ol>}
 
-        return index === teaserAfterIndex && teaser ? [row, teaser] : [row];
-      })}
-    </ol>
+      {rest.length > 0 && (
+        <>
+          <SectionDivider label="TOP 20" />
+          <ol className={listClass}>{rows(TOP_MARK, items.length)}</ol>
+        </>
+      )}
+
+      {pagination}
+    </div>
   );
 }

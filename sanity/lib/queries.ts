@@ -26,6 +26,12 @@ export const SITE_CONFIG_QUERY = defineQuery(/* groq */ `
     causeBlurb,
     fundMessage,
     minimumIncrement,
+    "heroImageUrl": heroImage.asset->url,
+    heroImageAlt,
+    heroBadge,
+    heroStatValue,
+    heroStatCaption,
+    heroChips,
     creatorName,
     "creatorPhotoUrl": creatorPhoto.asset->url,
     creatorBlurb
