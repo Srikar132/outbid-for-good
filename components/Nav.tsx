@@ -45,10 +45,28 @@ export function Nav({
           ))}
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
           <Link
+            href="/daily"
+            className="text-body flex h-9 items-center whitespace-nowrap rounded-full px-2 text-neutral-700 transition-colors hover:bg-neutral-100 sm:px-3"
+          >
+            Daily
+          </Link>
+          <Link
+            href="/categories"
+            className="text-body flex h-9 items-center whitespace-nowrap rounded-full px-2 text-neutral-700 transition-colors hover:bg-neutral-100 sm:px-3"
+          >
+            Categories
+          </Link>
+          <Link
             href="/about"
             className="text-body flex h-9 items-center whitespace-nowrap rounded-full px-2 text-neutral-700 transition-colors hover:bg-neutral-100 sm:px-3"
           >
             About
+          </Link>
+          <Link
+            href="/rules"
+            className="text-body flex h-9 items-center whitespace-nowrap rounded-full px-2 text-neutral-700 transition-colors hover:bg-neutral-100 sm:px-3"
+          >
+            Rules
           </Link>
           <Link
             href="#cause"

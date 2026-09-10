@@ -14,8 +14,15 @@ export function Footer() {
     <footer className="mt-auto border-t border-neutral-200 py-8 text-center">
       <p className="text-small text-neutral-500">
         Built by{" "}
-        <span className="font-semibold text-neutral-700">@srikar</span> &{" "}
-        <span className="font-semibold text-neutral-700">@Ramakrishna</span> &middot;{" "}
+        <a
+          href="https://www.instagram.com/ramakrishna_0006"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-neutral-700 hover:text-primary-500"
+        >
+          @Ramakrishna
+        </a>{" "}
+        & <span className="font-semibold text-neutral-700">@srikar</span> &middot;{" "}
         <a
           href="https://orbitfilings.com"
           target="_blank"

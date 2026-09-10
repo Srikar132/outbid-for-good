@@ -4,6 +4,7 @@ import { LeaderboardEntryResult } from "@/sanity/lib/data";
 import { formatAmount, timeAgo } from "@/lib/format";
 import { categoryIcons } from "@/lib/category-icons";
 import { faviconUrlFor, isHandleStyleUrl } from "@/lib/identity";
+import { TodayTopRanking } from "./TodayTopRanking";
 
 const logoTint: Record<string, string> = {
   individual: "bg-primary-100 text-primary-500",
@@ -12,12 +13,20 @@ const logoTint: Record<string, string> = {
 };
 
 const getRankBg = (index: number) => {
-  if (index === 0) return "bg-[#F7EBE3] dark:bg-[#28211C]";
-  if (index === 1) return "bg-[#F9F0EA] dark:bg-[#231E1B]";
-  return "bg-[#FAF5F0] dark:bg-[#1E1B19]";
+  if (index === 0) return "bg-[#DCEAFB] dark:bg-[#17233A]";
+  if (index === 1) return "bg-[#E5F0FC] dark:bg-[#141F33]";
+  return "bg-[#EDF4FD] dark:bg-[#11192B]";
 };
 
-export function LeaderboardList({ entries }: { entries: LeaderboardEntryResult[] }) {
+export function LeaderboardList({
+  entries,
+  todayTop,
+  todayHref,
+}: {
+  entries: LeaderboardEntryResult[];
+  todayTop?: LeaderboardEntryResult[];
+  todayHref?: string;
+}) {
   if (entries.length === 0) {
     return (
       <div className="rounded-2xl bg-surface p-8 text-center shadow-sm">
@@ -28,16 +37,22 @@ export function LeaderboardList({ entries }: { entries: LeaderboardEntryResult[]
     );
   }
 
+  const teaser =
+    todayTop && todayTop.length > 0 && todayHref ? (
+      <TodayTopRanking key="today-top-ranking" entries={todayTop} href={todayHref} />
+    ) : null;
+  const teaserAfterIndex = Math.min(2, entries.length - 1);
+
   return (
     <ol className="flex flex-col gap-3">
-      {entries.map((entry, index) => {
+      {entries.flatMap((entry, index) => {
         const CategoryIcon = categoryIcons[entry.category.slug];
         const name = entry.companyName ?? entry.displayName;
 
-        return (
+        const row = (
           <li
             key={entry._id}
-            className={`group relative flex items-start gap-2.5 rounded-2xl p-3 transition-all hover:shadow-xs sm:gap-3 sm:p-3.5 ${getRankBg(
+            className={`group relative flex items-start gap-2.5 rounded-2xl border border-neutral-200 p-3 shadow-sm transition-shadow hover:shadow-md sm:gap-3 sm:p-3.5 dark:border-white/5 ${getRankBg(
               index
             )}`}
           >
@@ -100,6 +115,8 @@ export function LeaderboardList({ entries }: { entries: LeaderboardEntryResult[]
             </div>
           </li>
         );
+
+        return index === teaserAfterIndex && teaser ? [row, teaser] : [row];
       })}
     </ol>
   );

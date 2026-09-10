@@ -1,9 +1,12 @@
 import { ClaimBand } from "@/components/leaderboard/ClaimBand";
-import { LeaderboardSection } from "@/components/leaderboard/LeaderboardSection";
+import { CategoryTabs } from "@/components/leaderboard/CategoryTabs";
+import { LeaderboardList } from "@/components/leaderboard/LeaderboardList";
 import { CauseCard } from "@/components/ui/Card";
 import { getLeaderboardData } from "@/sanity/lib/data";
 import { filterEntries, scopeTopAmount } from "@/lib/filters";
-import { Scope } from "@/lib/scope";
+import { Scope, viewToggleHref } from "@/lib/scope";
+
+const TODAY_TOP_COUNT = 3;
 
 const FALLBACK_CAUSE_TITLE = "This cause is being set up";
 const FALLBACK_CAUSE_BLURB =
@@ -22,18 +25,29 @@ export default async function Home({
   const minimumIncrement = siteConfig?.minimumIncrement ?? FALLBACK_MIN_INCREMENT;
   const topAmount = scopeTopAmount(filterEntries(entries, scope));
   const filtered = filterEntries(entries, { ...scope, q });
+  const todayTop = filterEntries(entries, { ...scope, today: true, q }).slice(
+    0,
+    TODAY_TOP_COUNT
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 sm:px-8">
+      <CategoryTabs categories={categories} scope={scope} q={q} />
+
       <ClaimBand
         key="all-all-time"
         scope={scope}
         scopeTopAmount={topAmount}
         minimumIncrement={minimumIncrement}
         categories={categories}
+        q={q}
       />
 
-      <LeaderboardSection entries={filtered} categories={categories} scope={scope} q={q} />
+      <LeaderboardList
+        entries={filtered}
+        todayTop={todayTop}
+        todayHref={viewToggleHref("today", scope, q)}
+      />
 
       <section id="cause" className="scroll-mt-20 pt-6">
         <CauseCard

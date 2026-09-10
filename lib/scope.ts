@@ -12,8 +12,8 @@ export function scopeLabel(scope: Scope, categories: CategoryResult[]) {
 
   if (categoryTitle && scope.today) return ` in ${categoryTitle} today`;
   if (categoryTitle) return ` in ${categoryTitle}`;
-  if (scope.today) return " today";
-  return "";
+  if (scope.today) return " in all categories today";
+  return " in all categories";
 }
 
 function withQuery(href: string, extra?: Record<string, string | undefined>) {

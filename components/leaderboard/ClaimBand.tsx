@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Globe, Minus, Plus, AtSign } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ChevronDown, Globe, Minus, Plus, AtSign } from "lucide-react";
 import Link from "next/link";
 import posthog from "posthog-js";
 import { CategoryResult } from "@/sanity/lib/data";
 import { categoryIcons } from "@/lib/category-icons";
 import { Scope, scopeLabel } from "@/lib/scope";
 import { faviconUrlFor, parseIdentity } from "@/lib/identity";
+import { ViewToggle } from "./ViewToggle";
 
 type RankPreview = { rank: number; total: number };
 type ExistingEntry = { exists: false } | { exists: true; displayName: string; amount: number };
@@ -17,35 +18,63 @@ export function ClaimBand({
   scopeTopAmount,
   minimumIncrement,
   categories,
+  q,
 }: {
   scope: Scope;
   scopeTopAmount: number;
   minimumIncrement: number;
   categories: CategoryResult[];
+  q?: string;
 }) {
   const claimAmount = scopeTopAmount + minimumIncrement;
   const label = scopeLabel(scope, categories);
 
   const categoryLocked = !!scope.categorySlug;
 
-  const [amount, setAmount] = useState(claimAmount);
+  const [amountText, setAmountText] = useState(String(claimAmount));
+  const amount = parseInt(amountText, 10) || 0;
   const [identityInput, setIdentityInput] = useState("");
-  const [category, setCategory] = useState(scope.categorySlug ?? categories[0]?.slug ?? "");
+  const [category, setCategory] = useState(scope.categorySlug ?? "");
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<RankPreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [existing, setExisting] = useState<ExistingEntry>({ exists: false });
   const lookupRequestId = useRef(0);
+  const amountMirrorRef = useRef<HTMLSpanElement>(null);
+  const [amountInputWidth, setAmountInputWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    if (amountMirrorRef.current) {
+      setAmountInputWidth(amountMirrorRef.current.offsetWidth);
+    }
+  }, [amountText]);
 
   const step = (dir: 1 | -1) => {
     const next = Math.max(minimumIncrement, amount + dir * minimumIncrement);
-    setAmount(next);
+    setAmountText(String(next));
     posthog.capture("claim_amount_adjusted", {
       direction: dir === 1 ? "increase" : "decrease",
       new_amount: next,
       scope_category: scope.categorySlug ?? null,
       scope_today: !!scope.today,
     });
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAmountText(e.target.value.replace(/[^0-9]/g, ""));
+  };
+
+  const handleAmountBlur = () => {
+    const clamped = Math.max(1, amount);
+    if (clamped !== amount) {
+      posthog.capture("claim_amount_adjusted", {
+        direction: "manual",
+        new_amount: clamped,
+        scope_category: scope.categorySlug ?? null,
+        scope_today: !!scope.today,
+      });
+    }
+    setAmountText(String(clamped));
   };
 
   const identity = parseIdentity(identityInput);
@@ -97,25 +126,48 @@ export function ClaimBand({
 
   return (
     <section className="flex flex-col items-center gap-4 py-8 text-center">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => step(-1)}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition-colors hover:border-accent-300 hover:text-accent-500"
-          aria-label="Decrease amount"
-        >
-          <Minus size={16} />
-        </button>
-        <h1 className="text-display text-neutral-900">
-          Claim rank{label} for{" "}
-          <span className={`tabular-nums text-accent-500`}>₹{amount.toLocaleString("en-IN")}</span>
-        </h1>
-        <button
-          onClick={() => step(1)}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition-colors hover:border-accent-300 hover:text-accent-500"
-          aria-label="Increase amount"
-        >
-          <Plus size={16} />
-        </button>
+      <ViewToggle scope={scope} q={q} />
+
+      <div className="flex flex-col items-center gap-1">
+        <h1 className="text-display text-neutral-900">Claim #1{label} for</h1>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => step(-1)}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition-colors hover:border-accent-300 hover:text-accent-500"
+            aria-label="Decrease amount"
+          >
+            <Minus size={16} />
+          </button>
+          <span className="text-display relative inline-flex items-baseline text-accent-500">
+            ₹
+            <span
+              ref={amountMirrorRef}
+              aria-hidden
+              className="tabular-nums text-display pointer-events-none absolute -z-10 whitespace-pre opacity-0"
+            >
+              {amountText || "0"}
+            </span>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={amountText}
+              onChange={handleAmountChange}
+              onFocus={(e) => e.target.select()}
+              onBlur={handleAmountBlur}
+              aria-label="Bid amount in rupees"
+              className="tabular-nums text-display border-b-2 border-dashed border-accent-200 bg-transparent text-accent-500 outline-none focus:border-accent-500"
+              style={{ width: amountInputWidth ? `${amountInputWidth + 3}px` : "1ch" }}
+            />
+          </span>
+          <button
+            onClick={() => step(1)}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition-colors hover:border-accent-300 hover:text-accent-500"
+            aria-label="Increase amount"
+          >
+            <Plus size={16} />
+          </button>
+        </div>
       </div>
 
       <p className="text-body text-neutral-500">
@@ -137,46 +189,91 @@ export function ClaimBand({
         )}
       </p>
 
-      <div className="relative flex w-full max-w-2xl items-center gap-1.5 rounded-full bg-surface p-1.5 shadow-md transition-shadow focus-within:ring-2 focus-within:ring-accent-300 dark:ring-1 dark:ring-white/5">
-        <button
-          type="button"
-          onClick={() => !categoryLocked && setOpen((v) => !v)}
-          aria-label={
-            categoryLocked
-              ? `Category: ${selected?.title ?? category}`
-              : `Category: ${selected?.title ?? "choose one"}`
-          }
-          disabled={categoryLocked}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 transition-colors disabled:cursor-default enabled:hover:bg-neutral-200"
-        >
-          {SelectedIcon && <SelectedIcon size={16} />}
-        </button>
-
-        {identity && (
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100">
-            {identity.kind === "handle" ? (
-              <AtSign size={14} className="text-neutral-500" />
+      <div className="flex w-full max-w-2xl flex-col items-center gap-2 sm:flex-row sm:justify-center">
+        <div className="flex w-full min-w-0 items-center gap-1.5 rounded-full bg-surface p-1.5 shadow-md transition-shadow focus-within:ring-2 focus-within:ring-accent-300 sm:flex-1 dark:ring-1 dark:ring-white/5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 text-neutral-500">
+            {identity ? (
+              identity.kind === "handle" ? (
+                <AtSign size={14} />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={faviconUrlFor(identity.url)} alt="" className="h-4 w-4" />
+              )
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={faviconUrlFor(identity.url)}
-                alt=""
-                className="h-4 w-4"
-              />
+              <Globe size={14} />
             )}
           </span>
-        )}
 
-        <input
-          value={identityInput}
-          onChange={(e) => setIdentityInput(e.target.value)}
-          placeholder="URL or @handle"
-          className="text-body h-11 min-w-0 flex-1 bg-transparent px-1 text-neutral-900 outline-none"
-        />
+          <input
+            value={identityInput}
+            onChange={(e) => setIdentityInput(e.target.value)}
+            placeholder="URL or @handle"
+            className="text-body h-9 min-w-0 flex-1 bg-transparent px-1 text-neutral-900 outline-none"
+          />
+        </div>
+
+        <div className="relative w-full shrink-0 sm:w-auto">
+          <button
+            type="button"
+            onClick={() => !categoryLocked && setOpen((v) => !v)}
+            aria-label={
+              categoryLocked
+                ? `Category: ${selected?.title ?? category}`
+                : `Category: ${selected?.title ?? "choose one"}`
+            }
+            disabled={categoryLocked}
+            className="text-body flex h-14 w-full items-center gap-2 rounded-full bg-surface px-5 font-medium text-neutral-700 shadow-md transition-colors enabled:hover:bg-neutral-50 disabled:cursor-default sm:w-auto dark:ring-1 dark:ring-white/5"
+          >
+            {SelectedIcon && <SelectedIcon size={16} className="shrink-0 text-neutral-500" />}
+            <span className="min-w-0 flex-1 truncate text-left sm:flex-none">
+              {selected?.title ?? "Choose a category"}
+            </span>
+            {!categoryLocked && (
+              <ChevronDown size={16} className="shrink-0 text-neutral-400" />
+            )}
+          </button>
+
+          {open && !categoryLocked && (
+            <>
+              <button
+                type="button"
+                aria-hidden
+                onClick={() => setOpen(false)}
+                className="fixed inset-0 z-10 cursor-default"
+              />
+              <ul className="text-body absolute left-0 top-full z-20 mt-2 w-56 rounded-lg border border-neutral-200 bg-surface p-2 text-left shadow-lg">
+                {categories.map((c) => {
+                  const Icon = categoryIcons[c.slug];
+                  return (
+                    <li key={c.slug}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCategory(c.slug);
+                          setOpen(false);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-neutral-700 hover:bg-accent-50"
+                      >
+                        {Icon && <Icon size={16} className="text-neutral-500" />}
+                        {c.title}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+        </div>
 
         <Link
           href={claimHref}
-          onClick={() =>
+          aria-disabled={!category}
+          onClick={(e) => {
+            if (!category) {
+              e.preventDefault();
+              setOpen(true);
+              return;
+            }
             posthog.capture("claim_rank_clicked", {
               amount,
               category,
@@ -184,43 +281,14 @@ export function ClaimBand({
               scope_today: !!scope.today,
               is_reclaim: reclaiming,
               projected_rank: preview?.rank ?? null,
-            })
-          }
-          className="flex h-11 shrink-0 items-center justify-center rounded-full bg-accent-500 px-6 text-sm font-semibold text-white transition-colors hover:bg-accent-400"
+            });
+          }}
+          className={`flex h-14 w-full shrink-0 items-center justify-center rounded-full px-6 text-sm font-semibold text-white shadow-md transition-colors sm:w-auto ${
+            category ? "bg-accent-500 hover:bg-accent-400" : "bg-accent-300"
+          }`}
         >
           {reclaiming ? "Reclaim rank" : "Claim rank"}
         </Link>
-
-        {open && !categoryLocked && (
-          <>
-            <button
-              type="button"
-              aria-hidden
-              onClick={() => setOpen(false)}
-              className="fixed inset-0 z-10 cursor-default"
-            />
-            <ul className="text-body absolute left-0 top-full z-20 mt-2 w-56 rounded-lg border border-neutral-200 bg-surface p-2 text-left shadow-lg">
-              {categories.map((c) => {
-                const Icon = categoryIcons[c.slug];
-                return (
-                  <li key={c.slug}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCategory(c.slug);
-                        setOpen(false);
-                      }}
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-neutral-700 hover:bg-accent-50"
-                    >
-                      {Icon && <Icon size={16} className="text-neutral-500" />}
-                      {c.title}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        )}
       </div>
     </section>
   );
