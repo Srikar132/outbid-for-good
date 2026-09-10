@@ -42,10 +42,10 @@ export default async function CategoriesPage() {
     .slice(0, MOST_ACTIVE_COUNT);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 sm:px-8">
-      <div className="pt-6">
-        <h1 className="text-h2 text-neutral-900">Categories</h1>
-        <p className="text-body mt-1 text-neutral-500">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 pt-6 sm:px-8">
+      <div>
+        <h1 className="text-display text-neutral-900">Categories</h1>
+        <p className="text-body mt-2 max-w-2xl text-neutral-500">
           Every category has its own ranking. Pick one to see who leads it.
         </p>
       </div>

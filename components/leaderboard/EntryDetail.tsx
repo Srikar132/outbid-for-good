@@ -56,7 +56,7 @@ function SiblingRow({
     >
       <span className="text-body w-8 shrink-0 tabular-nums text-neutral-400">#{rank}</span>
       <span className="text-body-lg min-w-0 flex-1 truncate text-neutral-900">{name}</span>
-      <span className="text-body-lg shrink-0 tabular-nums text-accent-500">
+      <span className="text-body-lg shrink-0 tabular-nums text-accent-500 dark:text-neutral-900">
         {formatAmount(amount)}
       </span>
     </Link>
@@ -141,7 +141,7 @@ export function EntryDetailView({
             </div>
           </div>
 
-          <p className="text-display shrink-0 tabular-nums text-accent-500">
+          <p className="text-display shrink-0 tabular-nums text-accent-500 dark:text-neutral-900">
             {formatAmount(entry.amount)}
           </p>
         </div>

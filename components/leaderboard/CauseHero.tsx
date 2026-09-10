@@ -6,7 +6,7 @@ import { SiteConfigResult } from "@/sanity/lib/data";
  * Drop a file in public/ and point this at it, e.g. "/hero-river.jpg".
  * Set to null to render nothing until Sanity has an image.
  */
-const FALLBACK_HERO_SRC: string | null = "/bhopal-image.jpeg";
+const FALLBACK_HERO_SRC: string | null = null;
 const FALLBACK_HERO_ALT = "Volunteers clearing waste from the river";
 
 /**

@@ -44,7 +44,7 @@ export default async function Home({
   const todayEntries = filterEntries(entries, { today: true });
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 sm:px-8">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 pt-6 sm:px-8">
       <CategoryTabs categories={categories} scope={scope} q={q} />
 
       <ClaimBand

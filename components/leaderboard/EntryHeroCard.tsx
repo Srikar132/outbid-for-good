@@ -30,7 +30,7 @@ export function EntryHeroCard({
     <li
       className={`group relative flex items-start gap-3 rounded-2xl border border-neutral-200 p-4 shadow-sm transition-shadow hover:shadow-md sm:gap-4 sm:p-5 dark:border-white/5 ${tint}`}
     >
-      <span className="text-body-lg w-7 shrink-0 pt-1 text-center font-extrabold tabular-nums text-accent-500 sm:w-8">
+      <span className="text-body-lg w-7 shrink-0 pt-1 text-center font-extrabold tabular-nums text-accent-500 dark:text-neutral-900 sm:w-8">
         #{rank}
       </span>
 
@@ -46,7 +46,7 @@ export function EntryHeroCard({
           >
             {name}
           </a>
-          <span className="text-h3 shrink-0 font-extrabold tabular-nums text-accent-500">
+          <span className="text-h3 shrink-0 font-extrabold tabular-nums text-accent-500 dark:text-neutral-900">
             {formatAmount(entry.amount)}
           </span>
         </div>

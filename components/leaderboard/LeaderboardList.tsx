@@ -1,5 +1,5 @@
 import { LeaderboardEntryResult } from "@/sanity/lib/data";
-import { Scope } from "@/lib/scope";
+import { pageHref, Scope } from "@/lib/scope";
 import { paginate } from "@/lib/pagination";
 import { EntryHeroCard } from "./EntryHeroCard";
 import { EntryRow } from "./EntryRow";
@@ -23,6 +23,7 @@ export function LeaderboardList({
   page,
   scope,
   q,
+  hrefFor,
   rankById,
   todayEntries,
   todayHref,
@@ -31,12 +32,17 @@ export function LeaderboardList({
   entries: LeaderboardEntryResult[];
   /**
    * Omit for a plain flat list — no paging, no sections, no pagination
-   * control. That is the mode DailyBoard uses, where each day is already a
-   * small self-contained board.
+   * control — used where the caller has already bounded the list itself.
    */
   page?: number;
   scope?: Scope;
   q?: string;
+  /**
+   * Overrides how page links are built. Defaults to the scope-aware
+   * leaderboard URL; the daily day pages pass their own so paging stays on
+   * /daily/[date] instead of jumping to the main board.
+   */
+  hrefFor?: (page: number) => string;
   /** True board ranks, supplied while searching (see app/page.tsx). */
   rankById?: Map<string, number>;
   /** Last-24h entries for the strip after rank #3. */
@@ -80,8 +86,7 @@ export function LeaderboardList({
       total={pageData.total}
       rangeStart={pageData.rangeStart}
       rangeEnd={pageData.rangeEnd}
-      scope={scope ?? {}}
-      q={q}
+      hrefFor={hrefFor ?? ((p) => pageHref(p, scope ?? {}, q))}
     />
   ) : null;
 

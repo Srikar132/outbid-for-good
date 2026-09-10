@@ -130,7 +130,10 @@ export function ClaimBand({
 
       <div className="flex flex-col items-center gap-1">
         <h1 className="text-display text-neutral-900">Claim #1{label} for</h1>
-        <div className="flex items-center gap-3">
+        {/* The amount input is sized in inline px from a mirror span, so it
+            cannot shrink on its own. Wrap + min-w-0 keep a long amount from
+            pushing the +/- buttons off a 360px screen. */}
+        <div className="flex w-full flex-wrap items-center justify-center gap-3">
           <button
             onClick={() => step(-1)}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition-colors hover:border-accent-300 hover:text-accent-500"
@@ -138,7 +141,7 @@ export function ClaimBand({
           >
             <Minus size={16} />
           </button>
-          <span className="text-display relative inline-flex items-baseline text-accent-500">
+          <span className="text-display relative inline-flex min-w-0 items-baseline text-accent-500 dark:text-neutral-900">
             ₹
             <span
               ref={amountMirrorRef}
@@ -156,7 +159,7 @@ export function ClaimBand({
               onFocus={(e) => e.target.select()}
               onBlur={handleAmountBlur}
               aria-label="Bid amount in rupees"
-              className="tabular-nums text-display border-b-2 border-dashed border-accent-200 bg-transparent text-accent-500 outline-none focus:border-accent-500"
+              className="tabular-nums text-display max-w-full min-w-0 border-b-2 border-dashed border-accent-200 bg-transparent text-accent-500 outline-none focus:border-accent-500 dark:border-neutral-300 dark:text-neutral-900 dark:focus:border-neutral-500"
               style={{ width: amountInputWidth ? `${amountInputWidth + 3}px` : "1ch" }}
             />
           </span>
@@ -222,7 +225,7 @@ export function ClaimBand({
                 : `Category: ${selected?.title ?? "choose one"}`
             }
             disabled={categoryLocked}
-            className="text-body flex h-14 w-full items-center gap-2 rounded-full bg-surface px-5 font-medium text-neutral-700 shadow-md transition-colors enabled:hover:bg-neutral-50 disabled:cursor-default sm:w-auto dark:ring-1 dark:ring-white/5"
+            className="text-body flex h-12 w-full items-center gap-2 rounded-full bg-surface px-4 font-medium text-neutral-700 shadow-md transition-colors enabled:hover:bg-neutral-50 disabled:cursor-default sm:w-auto dark:ring-1 dark:ring-white/5"
           >
             {SelectedIcon && <SelectedIcon size={16} className="shrink-0 text-neutral-500" />}
             <span className="min-w-0 flex-1 truncate text-left sm:flex-none">
@@ -283,7 +286,7 @@ export function ClaimBand({
               projected_rank: preview?.rank ?? null,
             });
           }}
-          className={`flex h-14 w-full shrink-0 items-center justify-center rounded-full px-6 text-sm font-semibold text-white shadow-md transition-colors sm:w-auto ${
+          className={`flex h-12 w-full shrink-0 items-center justify-center rounded-full px-5 text-sm font-semibold text-white shadow-md transition-colors sm:w-auto ${
             category ? "bg-accent-500 hover:bg-accent-400" : "bg-accent-300"
           }`}
         >

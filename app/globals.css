@@ -3,20 +3,25 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Primary (deep navy — cause card, secondary emphasis) */
-  --color-primary-500: #1e3a5f;
-  --color-primary-400: #2c4f7c;
-  --color-primary-300: #5478a0;
-  --color-primary-200: #9fb8d1;
-  --color-primary-100: #e6edf5;
+  /* Primary (deep blue — cause card, secondary emphasis).
+     500 is the brand blue; the rest of the scale is derived from it so tints
+     stay in the same hue family. */
+  --color-primary-500: #064089;
+  --color-primary-400: #0a56b3;
+  --color-primary-300: #3d7fd1;
+  --color-primary-200: #9cbfe8;
+  --color-primary-100: #e4edf9;
 
-  /* Accent (Trust blue) */
-  --color-accent-500: #2563eb;
-  --color-accent-400: #3b82f6;
-  --color-accent-300: #60a5fa;
-  --color-accent-200: #93c5fd;
-  --color-accent-100: #dbeafe;
-  --color-accent-50: #eff6ff;
+  /* Accent — the brand blue. This is the token the UI actually reads: ranks,
+     amounts, buttons, tabs, badges and pagination all use accent-500, so it is
+     what the site reads as "the colour". 400 is the hover step, 300/200 are
+     borders and rings, 100/50 are the podium tints. */
+  --color-accent-500: #064089;
+  --color-accent-400: #0a56b3;
+  --color-accent-300: #3d7fd1;
+  --color-accent-200: #9cbfe8;
+  --color-accent-100: #dbe8f7;
+  --color-accent-50: #eff5fc;
 
   /* Cool white page background */
   --color-cream: #f8fafc;
@@ -195,7 +200,7 @@ body {
   --color-neutral-50: #0b1220;
   --color-accent-50: #16233a;
   --color-accent-100: #1b2e4d;
-  --color-primary-100: #16233a;
+  --color-primary-100: #10254a;
 }
 
 /* Focus is styled once, deliberately, instead of falling back to the
@@ -214,11 +219,15 @@ body {
   border-radius: var(--radius-xs);
 }
 
+/* A 10% tint reads too faint on a dark ground, so these lift to 18%. Mixed
+   from the token rather than written as a literal rgba() — the previous
+   hardcoded values silently kept the old palette's blue and red after the
+   theme was retinted, which is exactly the drift this avoids. */
 .dark .bg-info\/10 {
-  background-color: rgba(37, 99, 235, 0.18);
+  background-color: color-mix(in srgb, var(--color-info) 18%, transparent);
 }
 .dark .bg-error\/10 {
-  background-color: rgba(220, 38, 38, 0.18);
+  background-color: color-mix(in srgb, var(--color-error) 18%, transparent);
 }
 /* Shadows barely read on a dark surface, so elevation comes from a faint
    white ring instead once we're in dark mode. */

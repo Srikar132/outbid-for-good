@@ -10,6 +10,7 @@ const logoTint: Record<string, string> = {
 };
 
 const sizes = {
+  xs: { box: "h-6 w-6 rounded-md", img: "h-3.5 w-3.5", icon: 12 },
   sm: { box: "h-8 w-8 rounded-lg", img: "h-4 w-4", icon: 14 },
   md: { box: "h-10 w-10 rounded-xl sm:h-11 sm:w-11", img: "h-5 w-5", icon: 18 },
   lg: { box: "h-12 w-12 rounded-xl sm:h-14 sm:w-14", img: "h-6 w-6 sm:h-7 sm:w-7", icon: 22 },
