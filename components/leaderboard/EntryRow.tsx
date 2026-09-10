@@ -22,7 +22,7 @@ export function EntryRow({
 
   return (
     <li className="group relative flex items-start gap-2.5 py-3 transition-colors sm:gap-3 sm:py-3.5">
-      <span className="text-body-lg w-10 shrink-0 pt-0.5 text-center font-extrabold tabular-nums text-accent-500">
+      <span className="text-body-lg w-10 shrink-0 pt-0.5 text-center font-extrabold tabular-nums text-accent-500 dark:text-neutral-900">
         #{rank}
       </span>
 
@@ -38,7 +38,7 @@ export function EntryRow({
           >
             {name}
           </a>
-          <span className="text-body-lg shrink-0 font-extrabold tabular-nums text-accent-500">
+          <span className="text-body-lg shrink-0 font-extrabold tabular-nums text-accent-500 dark:text-neutral-900">
             {formatAmount(entry.amount)}
           </span>
         </div>

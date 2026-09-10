@@ -1,5 +1,6 @@
 import { ClaimBand } from "@/components/leaderboard/ClaimBand";
-import { LeaderboardSection } from "@/components/leaderboard/LeaderboardSection";
+import { CategoryTabs } from "@/components/leaderboard/CategoryTabs";
+import { LeaderboardList } from "@/components/leaderboard/LeaderboardList";
 import { CauseCard } from "@/components/ui/Card";
 import { getLeaderboardData } from "@/sanity/lib/data";
 import { filterEntries, scopeTopAmount } from "@/lib/filters";
@@ -36,21 +37,24 @@ export default async function TodayPage({
     : undefined;
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 sm:px-8">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 pt-6 sm:px-8">
+      <CategoryTabs categories={categories} scope={scope} q={q} />
+
       <ClaimBand
         key="all-today"
         scope={scope}
         scopeTopAmount={topAmount}
         minimumIncrement={minimumIncrement}
         categories={categories}
+        q={q}
       />
 
-      <LeaderboardSection
+      {/* No today strip here — this whole page already is today's board. */}
+      <LeaderboardList
         entries={filtered}
-        categories={categories}
+        page={parsePageParam(page)}
         scope={scope}
         q={q}
-        page={parsePageParam(page)}
         rankById={rankById}
       />
 

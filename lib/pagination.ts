@@ -5,6 +5,9 @@
 
 export const PAGE_SIZE = 50;
 
+/** Past-days list on /daily — whole days, so far fewer per page than entries. */
+export const DAYS_PAGE_SIZE = 15;
+
 /**
  * Reads ?page. Anything that isn't a positive integer falls back to 1, so a
  * hand-typed or stale URL degrades instead of erroring. Repeated params
@@ -34,12 +37,16 @@ export type PageResult<T> = {
  * and click — a 404 on a link the page itself just drew would be a real
  * failure mode, not a typo.
  */
-export function paginate<T>(entries: T[], requestedPage: number): PageResult<T> {
+export function paginate<T>(
+  entries: T[],
+  requestedPage: number,
+  size: number = PAGE_SIZE
+): PageResult<T> {
   const total = entries.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / size));
   const page = Math.min(Math.max(1, requestedPage), totalPages);
-  const startIndex = (page - 1) * PAGE_SIZE;
-  const items = entries.slice(startIndex, startIndex + PAGE_SIZE);
+  const startIndex = (page - 1) * size;
+  const items = entries.slice(startIndex, startIndex + size);
 
   return {
     items,

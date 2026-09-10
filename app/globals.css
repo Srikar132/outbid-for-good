@@ -3,44 +3,49 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Primary (Cause / Green accent) */
-  --color-primary-500: #2e5b44;
-  --color-primary-400: #3d7257;
-  --color-primary-300: #649e80;
-  --color-primary-200: #a3cda8;
-  --color-primary-100: #e8f2ea;
+  /* Primary (deep blue — cause card, secondary emphasis).
+     500 is the brand blue; the rest of the scale is derived from it so tints
+     stay in the same hue family. */
+  --color-primary-500: #064089;
+  --color-primary-400: #0a56b3;
+  --color-primary-300: #3d7fd1;
+  --color-primary-200: #9cbfe8;
+  --color-primary-100: #e4edf9;
 
-  /* Accent (Claude Terracotta / Orange) */
-  --color-accent-500: #d97757;
-  --color-accent-400: #e28a6d;
-  --color-accent-300: #eb9e84;
-  --color-accent-200: #f5beac;
-  --color-accent-100: #faf0eb;
-  --color-accent-50: #fcf6f3;
+  /* Accent — the brand blue. This is the token the UI actually reads: ranks,
+     amounts, buttons, tabs, badges and pagination all use accent-500, so it is
+     what the site reads as "the colour". 400 is the hover step, 300/200 are
+     borders and rings, 100/50 are the podium tints. */
+  --color-accent-500: #064089;
+  --color-accent-400: #0a56b3;
+  --color-accent-300: #3d7fd1;
+  --color-accent-200: #9cbfe8;
+  --color-accent-100: #dbe8f7;
+  --color-accent-50: #eff5fc;
 
-  /* Warm page background (Claude Light) */
-  --color-cream: #faf9f5;
+  /* Cool white page background */
+  --color-cream: #f8fafc;
 
   /* Card/surface background — distinct from --color-white */
   --color-surface: #ffffff;
-  --color-card-warm: #f8efeb;
-  --color-pill-bg: #f3ebe3;
+  --color-card-warm: #eaf1fa;
+  --color-pill-bg: #e8eef5;
 
-  /* Neutrals (Claude Dark text, Mid Gray, Light Gray) */
-  --color-neutral-900: #141413;
-  --color-neutral-700: #42403a;
-  --color-neutral-500: #b0aea5;
-  --color-neutral-300: #c9c7be;
-  --color-neutral-200: #e8e6dc;
-  --color-neutral-100: #f4f3ee;
-  --color-neutral-50: #faf9f5;
+  /* Neutrals (Tailwind slate scale) */
+  --color-neutral-900: #0f172a;
+  --color-neutral-700: #334155;
+  --color-neutral-500: #64748b;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-50: #f8fafc;
   --color-white: #ffffff;
 
-  /* Semantic (Claude Blue for info/links) */
-  --color-success: #2e5b44;
+  /* Semantic (info is indigo — a distinct tag color now that accent is blue) */
+  --color-success: #16a34a;
   --color-error: #c93b2b;
   --color-warning: #d97706;
-  --color-info: #6a9bcc;
+  --color-info: #7c6fd1;
 
   --background: var(--color-neutral-50);
   --foreground: var(--color-neutral-900);
@@ -53,10 +58,11 @@
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Shadows - subtle paper shadows */
-  --shadow-sm: 0 1px 2px rgba(20, 20, 19, 0.04);
-  --shadow-md: 0 4px 12px rgba(20, 20, 19, 0.06);
-  --shadow-lg: 0 12px 24px rgba(20, 20, 19, 0.09);
+  /* Shadows — slightly stronger than a flat paper shadow, plus a hairline
+     1px ring so cards read as bordered, not just shadow-floated. */
+  --shadow-sm: 0 0 0 1px rgba(15, 23, 42, 0.03), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 0 0 1px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 0 0 1px rgba(15, 23, 42, 0.05), 0 16px 32px rgba(15, 23, 42, 0.12);
 }
 
 @theme inline {
@@ -181,20 +187,20 @@ body {
    --color-white is deliberately left alone: it means literal white (e.g.
    button label text on a solid accent button) regardless of theme. */
 .dark {
-  --color-cream: #141413;
-  --color-surface: #1e1d1b;
-  --color-card-warm: #24211e;
-  --color-pill-bg: #201d1a;
-  --color-neutral-900: #faf9f5;
-  --color-neutral-700: #e8e6dc;
-  --color-neutral-500: #b0aea5;
-  --color-neutral-300: #57554e;
-  --color-neutral-200: #2d2b27;
-  --color-neutral-100: #242320;
-  --color-neutral-50: #141413;
-  --color-accent-50: #2a1b15;
-  --color-accent-100: #3d2319;
-  --color-primary-100: #16261c;
+  --color-cream: #0b1220;
+  --color-surface: #131c2e;
+  --color-card-warm: #17223a;
+  --color-pill-bg: #131e30;
+  --color-neutral-900: #f1f5f9;
+  --color-neutral-700: #cbd5e1;
+  --color-neutral-500: #94a3b8;
+  --color-neutral-300: #334155;
+  --color-neutral-200: #1e293b;
+  --color-neutral-100: #17202f;
+  --color-neutral-50: #0b1220;
+  --color-accent-50: #16233a;
+  --color-accent-100: #1b2e4d;
+  --color-primary-100: #10254a;
 }
 
 /* Focus is styled once, deliberately, instead of falling back to the
@@ -213,11 +219,15 @@ body {
   border-radius: var(--radius-xs);
 }
 
+/* A 10% tint reads too faint on a dark ground, so these lift to 18%. Mixed
+   from the token rather than written as a literal rgba() — the previous
+   hardcoded values silently kept the old palette's blue and red after the
+   theme was retinted, which is exactly the drift this avoids. */
 .dark .bg-info\/10 {
-  background-color: rgba(37, 99, 235, 0.18);
+  background-color: color-mix(in srgb, var(--color-info) 18%, transparent);
 }
 .dark .bg-error\/10 {
-  background-color: rgba(220, 38, 38, 0.18);
+  background-color: color-mix(in srgb, var(--color-error) 18%, transparent);
 }
 /* Shadows barely read on a dark surface, so elevation comes from a faint
    white ring instead once we're in dark mode. */

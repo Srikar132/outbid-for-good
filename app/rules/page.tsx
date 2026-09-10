@@ -43,6 +43,32 @@ export default async function RulesPage() {
         </p>
       </div>
 
+      <Card>
+        <p className="text-body-lg font-bold text-neutral-900">The boards</p>
+        <p className="text-body mt-1 text-neutral-500">
+          One confirmed donation ranks you on every board that includes it — the boards just
+          look at different windows of time.
+        </p>
+        <ul className="text-body mt-3 flex flex-col gap-2 text-neutral-700">
+          <li>
+            <span className="font-semibold text-accent-500">All-time</span> is the main
+            leaderboard. Rank is everything confirmed so far this cycle. It doesn&apos;t reset
+            until the next cycle starts.
+          </li>
+          <li>
+            <span className="font-semibold text-accent-500">Today</span> is a rolling 24 hours.
+            A confirmed donation counts from the moment it&apos;s confirmed, then drops off a day
+            later. Whoever gave the most in that window leads Today.
+          </li>
+          <li>
+            <span className="font-semibold text-accent-500">Daily</span> is a UTC calendar day
+            &mdash; midnight to midnight. The current day stays live until it closes at midnight
+            UTC; past days freeze as a read-only archive. Rank on a given day is what was
+            confirmed that day, not a rolling 24 hours.
+          </li>
+        </ul>
+      </Card>
+
       <div className="flex flex-col gap-3">
         {rules.map((rule) => (
           <Card key={rule.title} className="flex items-start gap-4">

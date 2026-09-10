@@ -26,9 +26,9 @@ function TodayStripCard({
     <li className="w-[72%] shrink-0 snap-start sm:w-auto">
       <a
         href={`/api/click/${entry._id}`}
-        className="group flex h-full items-center gap-2.5 rounded-2xl bg-[#FAF5F0] p-3 transition-all hover:shadow-xs dark:bg-[#1E1B19]"
+        className="group flex h-full items-center gap-2.5 rounded-2xl border border-neutral-200 bg-surface p-3 shadow-sm transition-shadow hover:shadow-md dark:border-white/5"
       >
-        <span className="text-small w-6 shrink-0 text-center font-extrabold tabular-nums text-accent-500">
+        <span className="text-small w-6 shrink-0 text-center font-extrabold tabular-nums text-accent-500 dark:text-neutral-900">
           #{rank}
         </span>
 
@@ -39,7 +39,7 @@ function TodayStripCard({
             <span className="text-body truncate font-bold text-neutral-900 transition-colors group-hover:text-accent-500">
               {name}
             </span>
-            <span className="text-body shrink-0 font-extrabold tabular-nums text-accent-500">
+            <span className="text-body shrink-0 font-extrabold tabular-nums text-accent-500 dark:text-neutral-900">
               {formatAmount(entry.amount)}
             </span>
           </div>
@@ -60,7 +60,14 @@ function TodayStripCard({
  * Takes the full today-filtered list and slices it itself, so the heading and
  * the count it describes stay in one place.
  */
-export function TodayStrip({ entries }: { entries: LeaderboardEntryResult[] }) {
+export function TodayStrip({
+  entries,
+  href = "/today",
+}: {
+  entries: LeaderboardEntryResult[];
+  /** Scoped "see all" target — a category board links to its own today view. */
+  href?: string;
+}) {
   if (entries.length === 0) return null;
 
   return (
@@ -74,7 +81,7 @@ export function TodayStrip({ entries }: { entries: LeaderboardEntryResult[] }) {
           Today&apos;s top ranking
         </h2>
         <Link
-          href="/today"
+          href={href}
           className="text-small flex shrink-0 items-center gap-0.5 font-medium text-accent-500 hover:underline"
         >
           See all

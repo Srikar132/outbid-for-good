@@ -3,14 +3,14 @@ import { formatAmount } from "@/lib/format";
 import { EntryAvatar } from "./EntryAvatar";
 import { EntryMeta } from "./EntryMeta";
 
-// Three tints for the podium, warmest at #1. Ranks 4+ get no tint at all —
-// the drop to a plain divided row is what makes the top three read as a
+// Three tint steps for the podium, strongest at #1. Ranks 4+ get no tint at
+// all — the drop to a plain divided row is what makes the top three read as a
 // podium rather than just the first three items.
-const heroTint = [
-  "bg-[#F7EBE3] dark:bg-[#28211C]",
-  "bg-[#F9F0EA] dark:bg-[#231E1B]",
-  "bg-[#FAF5F0] dark:bg-[#1E1B19]",
-];
+//
+// Palette tokens, not hex: these already carry their own dark-mode values and
+// they follow a retint automatically. Hardcoding the hex here is what left the
+// podium warm-tinted after the theme moved to blue.
+const heroTint = ["bg-accent-100", "bg-accent-50", "bg-card-warm"];
 
 /**
  * Full-width tinted card for ranks 1-3. Stacked at every breakpoint rather
@@ -28,9 +28,9 @@ export function EntryHeroCard({
 
   return (
     <li
-      className={`group relative flex items-start gap-3 rounded-2xl p-4 transition-all hover:shadow-xs sm:gap-4 sm:p-5 ${tint}`}
+      className={`group relative flex items-start gap-3 rounded-2xl border border-neutral-200 p-4 shadow-sm transition-shadow hover:shadow-md sm:gap-4 sm:p-5 dark:border-white/5 ${tint}`}
     >
-      <span className="text-body-lg w-7 shrink-0 pt-1 text-center font-extrabold tabular-nums text-accent-500 sm:w-8">
+      <span className="text-body-lg w-7 shrink-0 pt-1 text-center font-extrabold tabular-nums text-accent-500 dark:text-neutral-900 sm:w-8">
         #{rank}
       </span>
 
@@ -46,7 +46,7 @@ export function EntryHeroCard({
           >
             {name}
           </a>
-          <span className="text-h3 shrink-0 font-extrabold tabular-nums text-accent-500">
+          <span className="text-h3 shrink-0 font-extrabold tabular-nums text-accent-500 dark:text-neutral-900">
             {formatAmount(entry.amount)}
           </span>
         </div>

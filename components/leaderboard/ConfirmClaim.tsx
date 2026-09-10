@@ -270,7 +270,7 @@ export function ConfirmClaim({
         <Badge variant="current">#1{label}</Badge>
         <p className="text-small text-neutral-500">Due now</p>
       </div>
-      <p className="text-display mt-2 tabular-nums text-accent-500">
+      <p className="text-display mt-2 tabular-nums text-accent-500 dark:text-neutral-900">
         ₹{amount.toLocaleString("en-IN")}
       </p>
       {categoryTitle && <p className="text-small text-neutral-500">{categoryTitle}</p>}
