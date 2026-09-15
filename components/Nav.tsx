@@ -13,7 +13,7 @@ const LINKS = [
   { href: "/categories", label: "Categories" },
   { href: "/about", label: "About" },
   { href: "/rules", label: "Rules" },
-  { href: "#cause", label: "Our Cause" },
+  { href: "/#cause", label: "Our Cause" },
 ];
 
 /* Motion is deliberately short and small — this is a donation site, so the
