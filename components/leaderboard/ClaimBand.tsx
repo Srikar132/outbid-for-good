@@ -27,12 +27,14 @@ export function ClaimBand({
   q?: string;
 }) {
   const claimAmount = scopeTopAmount + minimumIncrement;
+  const floor = Math.max(1, claimAmount);
   const label = scopeLabel(scope, categories);
 
   const categoryLocked = !!scope.categorySlug;
 
-  const [amountText, setAmountText] = useState(String(claimAmount));
+  const [amountText, setAmountText] = useState(String(floor));
   const amount = parseInt(amountText, 10) || 0;
+  const belowFloor = amount < floor;
   const [identityInput, setIdentityInput] = useState("");
   const [category, setCategory] = useState(scope.categorySlug ?? "");
   const [open, setOpen] = useState(false);
@@ -50,7 +52,7 @@ export function ClaimBand({
   }, [amountText]);
 
   const step = (dir: 1 | -1) => {
-    const next = Math.max(minimumIncrement, amount + dir * minimumIncrement);
+    const next = Math.max(floor, amount + dir * minimumIncrement);
     setAmountText(String(next));
     posthog.capture("claim_amount_adjusted", {
       direction: dir === 1 ? "increase" : "decrease",
@@ -65,16 +67,16 @@ export function ClaimBand({
   };
 
   const handleAmountBlur = () => {
-    const clamped = Math.max(1, amount);
-    if (clamped !== amount) {
+    const committed = amount || floor;
+    if (committed !== amount) {
       posthog.capture("claim_amount_adjusted", {
         direction: "manual",
-        new_amount: clamped,
+        new_amount: committed,
         scope_category: scope.categorySlug ?? null,
         scope_today: !!scope.today,
       });
     }
-    setAmountText(String(clamped));
+    setAmountText(String(committed));
   };
 
   const identity = parseIdentity(identityInput);
@@ -136,7 +138,8 @@ export function ClaimBand({
         <div className="flex w-full flex-wrap items-center justify-center gap-3">
           <button
             onClick={() => step(-1)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition-colors hover:border-accent-300 hover:text-accent-500"
+            disabled={amount <= floor}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition-colors enabled:hover:border-accent-300 enabled:hover:text-accent-500 disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Decrease amount"
           >
             <Minus size={16} />
@@ -173,8 +176,13 @@ export function ClaimBand({
         </div>
       </div>
 
-      <p className="text-body text-neutral-500">
-        {loading || !preview ? (
+      <p className="text-body text-neutral-500" aria-live="polite">
+        {belowFloor ? (
+          <span className="text-error">
+            Below the current floor{label}. Bid at least ₹
+            {floor.toLocaleString("en-IN")} to claim.
+          </span>
+        ) : loading || !preview ? (
           <span className="inline-block h-[1em] w-40 animate-pulse rounded bg-neutral-200 align-middle" />
         ) : isTop ? (
           <>That takes the top spot{label}.</>
@@ -270,8 +278,12 @@ export function ClaimBand({
 
         <Link
           href={claimHref}
-          aria-disabled={!category}
+          aria-disabled={!category || belowFloor}
           onClick={(e) => {
+            if (belowFloor) {
+              e.preventDefault();
+              return;
+            }
             if (!category) {
               e.preventDefault();
               setOpen(true);
@@ -287,8 +299,10 @@ export function ClaimBand({
             });
           }}
           className={`flex h-12 w-full shrink-0 items-center justify-center rounded-full px-5 text-sm font-semibold text-white shadow-md transition-colors sm:w-auto ${
-            category ? "bg-accent-500 hover:bg-accent-400" : "bg-accent-300"
-          }`}
+            category && !belowFloor
+              ? "bg-accent-500 hover:bg-accent-400"
+              : "bg-accent-300"
+          } ${belowFloor ? "cursor-not-allowed" : ""}`}
         >
           {reclaiming ? "Reclaim rank" : "Claim rank"}
         </Link>
