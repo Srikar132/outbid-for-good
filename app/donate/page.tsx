@@ -48,17 +48,20 @@ export default async function DonatePage({
         <ArrowLeft size={14} /> Back to leaderboard
       </Link>
 
-      {categoryInvalid || !amountValid ? (
+      {categoryInvalid ? (
         <div className="rounded-lg bg-surface p-5 shadow-sm">
           <p className="text-h3 text-neutral-900">This rank has changed</p>
           <p className="text-body mt-2 text-neutral-500">
-            {categoryInvalid
-              ? "That category no longer exists."
-              : `Someone may have claimed this rank in the meantime. The current floor${scopeLabel(
-                  scope,
-                  categories
-                )} is ₹${floor.toLocaleString("en-IN")}.`}{" "}
-            Go back and claim again.
+            That category no longer exists. Go back and claim again.
+          </p>
+        </div>
+      ) : !amountValid ? (
+        <div className="rounded-lg bg-surface p-5 shadow-sm">
+          <p className="text-h3 text-neutral-900">Your bid is below the floor</p>
+          <p className="text-body mt-2 text-neutral-500">
+            {Number.isFinite(amount) ? `₹${amount.toLocaleString("en-IN")}` : "This amount"} is
+            below the current floor{scopeLabel(scope, categories)}. Go back and bid at least ₹
+            {floor.toLocaleString("en-IN")}.
           </p>
         </div>
       ) : (
